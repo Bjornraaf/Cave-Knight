@@ -21,10 +21,12 @@ public class PlayingUI {
     //For Multitouch
     private int joystickPointerId = -1;
     private int attackButtonPointerID = -1;
+    private int abilityButtonPointerID = -1;
     private boolean touchDown;
 
     private final CustomButton homeButton;
     private final CustomButton attackButton;
+    private final CustomButton abilityButton; // New button
 
     public PlayingUI(Playing playing) {
         this.playing = playing;
@@ -37,9 +39,12 @@ public class PlayingUI {
         homeButton = new CustomButton(5,5, ButtonImages.HOME_BUTTON.getWidth(), ButtonImages.HOME_BUTTON.getHeight());
 
         attackButton = new CustomButton(attackButtonPosition.x, attackButtonPosition.y, ButtonImages.ATTACK_BUTTON.getWidth(), ButtonImages.ATTACK_BUTTON.getHeight());
+
+        PointF abilityPosition = new PointF(attackButtonPosition.x + 200, attackButtonPosition.y);
+        abilityButton = new CustomButton(abilityPosition.x + 25, abilityPosition.y, ButtonImages.ABILITY_BUTTON.getWidth(), ButtonImages.ABILITY_BUTTON.getHeight());
     }
 
-    public void draw(Canvas c){
+    public void draw(Canvas c) {
         drawUI(c);
     }
 
@@ -54,6 +59,11 @@ public class PlayingUI {
         c.drawBitmap(ButtonImages.HOME_BUTTON.getButtonImg(homeButton.isPushed(homeButton.getPointerId())),
                 homeButton.getHitbox().left + 25,
                 homeButton.getHitbox().top + 25,
+                null);
+
+        c.drawBitmap(ButtonImages.ABILITY_BUTTON.getButtonImg(abilityButton.isPushed(abilityButton.getPointerId())),
+                abilityButton.getHitbox().left + 25,
+                abilityButton.getHitbox().top + 25,
                 null);
     }
 
@@ -97,6 +107,12 @@ public class PlayingUI {
                         attackButton.setPushed(true, pointerId);
                         attackButtonPointerID = pointerId;
                     }
+                } else if (isIn(eventPos, abilityButton)) { // Handle extra button press
+                    if (abilityButtonPointerID < 0) {
+                        playing.setSliceAttacking(true);
+                        abilityButton.setPushed(true, pointerId);
+                        abilityButtonPointerID = pointerId;
+                    }
                 } else {
                     if (isIn(eventPos, homeButton)) {
                         homeButton.setPushed(true, pointerId);
@@ -129,12 +145,17 @@ public class PlayingUI {
                         attackButton.unPush(pointerId);
                         attackButtonPointerID = -1;
                     }
+
+                    if (pointerId == abilityButtonPointerID) { // Reset extra button
+                        abilityButton.unPush(pointerId);
+                        abilityButtonPointerID = -1;
+                    }
                 }
             }
         }
     }
 
-    private void resetJoystick(){
+    private void resetJoystick() {
         touchDown = false;
         playing.setPlayerMoveFalse();
         joystickPointerId = -1;
@@ -142,5 +163,13 @@ public class PlayingUI {
 
     private boolean isIn(PointF eventPos, CustomButton b) {
         return b.getHitbox().contains(eventPos.x, eventPos.y);
+    }
+
+    public CustomButton getAttackButton() {
+        return attackButton;
+    }
+
+    public CustomButton getAbilityButton() {
+        return abilityButton;
     }
 }

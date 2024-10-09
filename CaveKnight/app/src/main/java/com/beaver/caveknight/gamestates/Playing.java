@@ -37,6 +37,13 @@ public class Playing extends BaseState implements GameStateInterface {
 
     private boolean isAttacking;
     private boolean isAttackChecked;
+    private long attackStartTime; // To track the start time of the attack
+    private static final long ATTACK_DURATION = 350; // Attack duration in milliseconds
+
+    private boolean isSliceAttacking;
+    private long sliceAttackStartTime;
+    private static final long SLICE_ATTACK_DURATION = 300; // Adjust duration as needed
+    private static final float SLICE_ATTACK_WIDTH = 200; // Width of the attack hitbox
 
     private final ArrayList<Skeleton> skeletons;
 
@@ -76,13 +83,31 @@ public class Playing extends BaseState implements GameStateInterface {
 
         updateWeaponHitbox();
 
-        if (isAttacking) if (!isAttackChecked)
-            checkAttack();
+        // Check for normal attack
+        if (isAttacking) {
+            if (!isAttackChecked) {
+                checkAttack();
+            }
+            if (System.currentTimeMillis() - attackStartTime >= ATTACK_DURATION) {
+                setAttacking(false);
+                playingUI.getAttackButton().setPushed(false);
+            }
+        }
 
-        for (Skeleton skeleton : skeletons)
-            if (skeleton.isActive())
+        // Check for slice attack
+        if (isSliceAttacking) {
+            if (System.currentTimeMillis() - sliceAttackStartTime >= SLICE_ATTACK_DURATION) {
+                setSliceAttacking(false);
+            } else {
+                checkSliceAttack(); // Check if the slice attack hits enemies
+            }
+        }
+
+        for (Skeleton skeleton : skeletons) {
+            if (skeleton.isActive()) {
                 skeleton.update(delta);
-
+            }
+        }
 
         mapManager.setCameraValues(cameraX, cameraY);
     }
@@ -99,6 +124,45 @@ public class Playing extends BaseState implements GameStateInterface {
                 s.setActive(false);
 
         isAttackChecked = true;
+    }
+
+    private void checkSliceAttack() {
+        RectF sliceAttackHitbox = new RectF();
+        // Set the hitbox based on the player's current position and direction
+        float sliceAttackX = player.getHitbox().centerX();
+        float sliceAttackY = player.getHitbox().centerY();
+
+        switch (player.getFaceDir()) {
+            case GameConstants.Face_Dir.LEFT:
+                sliceAttackHitbox.set(sliceAttackX - SLICE_ATTACK_WIDTH, sliceAttackY - 50, sliceAttackX, sliceAttackY + 50);
+                break;
+            case GameConstants.Face_Dir.RIGHT:
+                sliceAttackHitbox.set(sliceAttackX, sliceAttackY - 50, sliceAttackX + SLICE_ATTACK_WIDTH, sliceAttackY + 50);
+                break;
+            // Handle UP and DOWN if needed
+            // case GameConstants.Face_Dir.UP:
+            // case GameConstants.Face_Dir.DOWN:
+            default:
+                return; // No slice attack in these directions
+        }
+
+        for (Skeleton skeleton : skeletons) {
+            if (skeleton.isActive() && RectF.intersects(sliceAttackHitbox, skeleton.getHitbox())) {
+                skeleton.setActive(false); // Deactivate the skeleton if hit
+            }
+        }
+    }
+
+    public void triggerSliceAttack() {
+        if (!isSliceAttacking) {
+            isSliceAttacking = true;
+            sliceAttackStartTime = System.currentTimeMillis();
+            // Optionally, you can play a sound or animation here
+        }
+    }
+
+    public void setSliceAttacking(boolean isSliceAttacking) {
+        this.isSliceAttacking = isSliceAttacking;
     }
 
     private void updateWeaponHitbox() {
@@ -322,8 +386,12 @@ public class Playing extends BaseState implements GameStateInterface {
 
     public void setAttacking(boolean isAttacking) {
         this.isAttacking = isAttacking;
-        if (!isAttacking)
+        if (isAttacking) {
+            attackStartTime = System.currentTimeMillis(); // Record when the attack starts
+        } else {
             isAttackChecked = false;
+        }
     }
+
 
 }
