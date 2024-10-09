@@ -3,6 +3,8 @@ package com.beaver.caveknight.gamestates;
 import static com.beaver.caveknight.helpers.GameConstants.Sprite.SCALE_MULTIPLIER;
 import static com.beaver.caveknight.helpers.GameConstants.Sprite.X_OFFSET;
 import static com.beaver.caveknight.helpers.GameConstants.Sprite.Y_OFFSET;
+import static com.beaver.caveknight.main.MainActivity.GAME_HEIGHT;
+import static com.beaver.caveknight.main.MainActivity.GAME_WIDTH;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -14,7 +16,9 @@ import android.view.MotionEvent;
 import com.beaver.caveknight.entities.Character;
 import com.beaver.caveknight.entities.Player;
 import com.beaver.caveknight.entities.Weapons;
+import com.beaver.caveknight.entities.buildings.BuildingManager;
 import com.beaver.caveknight.entities.enemies.Skeleton;
+import com.beaver.caveknight.environments.Doorway;
 import com.beaver.caveknight.environments.MapManager;
 import com.beaver.caveknight.helpers.GameConstants;
 import com.beaver.caveknight.helpers.interfaces.GameStateInterface;
@@ -37,13 +41,8 @@ public class Playing extends BaseState implements GameStateInterface {
 
     private boolean isAttacking;
     private boolean isAttackChecked;
-    private long attackStartTime; // To track the start time of the attack
-    private static final long ATTACK_DURATION = 350; // Attack duration in milliseconds
-
-    private boolean isSliceAttacking;
-    private long sliceAttackStartTime;
-    private static final long SLICE_ATTACK_DURATION = 300; // Adjust duration as needed
-    private static final float SLICE_ATTACK_WIDTH = 200; // Width of the attack hitbox
+    private long attackStartTime;
+    private static final long ATTACK_DURATION = 350;
 
     private final ArrayList<Skeleton> skeletons;
 
@@ -55,9 +54,10 @@ public class Playing extends BaseState implements GameStateInterface {
         super(game);
 
         mapManager = new MapManager();
+        calculateStartCamera();
+
         player = new Player();
         skeletons = new ArrayList<>();
-
 
         playingUI = new PlayingUI(this);
 
@@ -72,6 +72,11 @@ public class Playing extends BaseState implements GameStateInterface {
         updateWeaponHitbox();
     }
 
+    private void calculateStartCamera() {
+        cameraX = (float) GAME_WIDTH / 2 - (float) mapManager.getMaxWidthCurrentMap() / 2;
+        cameraY = (float) GAME_HEIGHT / 2 - (float) mapManager.getMaxHeightCurrentMap() / 2;
+    }
+
     public void spawnSkeleton(){
         skeletons.add(new Skeleton(new PointF(player.getHitbox().left - cameraX, player.getHitbox().top - cameraY)));
     }
@@ -80,10 +85,11 @@ public class Playing extends BaseState implements GameStateInterface {
     public void update(double delta) {
         updatePlayerMove(delta);
         player.update(delta, movePlayer);
+        mapManager.setCameraValues(cameraX, cameraY);
+        checkForDoorway();
 
         updateWeaponHitbox();
 
-        // Check for normal attack
         if (isAttacking) {
             if (!isAttackChecked) {
                 checkAttack();
@@ -94,22 +100,19 @@ public class Playing extends BaseState implements GameStateInterface {
             }
         }
 
-        // Check for slice attack
-        if (isSliceAttacking) {
-            if (System.currentTimeMillis() - sliceAttackStartTime >= SLICE_ATTACK_DURATION) {
-                setSliceAttacking(false);
-            } else {
-                checkSliceAttack(); // Check if the slice attack hits enemies
-            }
-        }
-
         for (Skeleton skeleton : skeletons) {
             if (skeleton.isActive()) {
                 skeleton.update(delta);
             }
         }
 
-        mapManager.setCameraValues(cameraX, cameraY);
+    }
+
+    private void checkForDoorway() {
+        Doorway doorwayPlayerIsOn = mapManager.isPlayerOnDoorway(player.getHitbox());
+
+        if (doorwayPlayerIsOn != null)
+            mapManager.changeMap(doorwayPlayerIsOn.getGameMap());
     }
 
     private void checkAttack() {
@@ -124,45 +127,6 @@ public class Playing extends BaseState implements GameStateInterface {
                 s.setActive(false);
 
         isAttackChecked = true;
-    }
-
-    private void checkSliceAttack() {
-        RectF sliceAttackHitbox = new RectF();
-        // Set the hitbox based on the player's current position and direction
-        float sliceAttackX = player.getHitbox().centerX();
-        float sliceAttackY = player.getHitbox().centerY();
-
-        switch (player.getFaceDir()) {
-            case GameConstants.Face_Dir.LEFT:
-                sliceAttackHitbox.set(sliceAttackX - SLICE_ATTACK_WIDTH, sliceAttackY - 50, sliceAttackX, sliceAttackY + 50);
-                break;
-            case GameConstants.Face_Dir.RIGHT:
-                sliceAttackHitbox.set(sliceAttackX, sliceAttackY - 50, sliceAttackX + SLICE_ATTACK_WIDTH, sliceAttackY + 50);
-                break;
-            // Handle UP and DOWN if needed
-            // case GameConstants.Face_Dir.UP:
-            // case GameConstants.Face_Dir.DOWN:
-            default:
-                return; // No slice attack in these directions
-        }
-
-        for (Skeleton skeleton : skeletons) {
-            if (skeleton.isActive() && RectF.intersects(sliceAttackHitbox, skeleton.getHitbox())) {
-                skeleton.setActive(false); // Deactivate the skeleton if hit
-            }
-        }
-    }
-
-    public void triggerSliceAttack() {
-        if (!isSliceAttacking) {
-            isSliceAttacking = true;
-            sliceAttackStartTime = System.currentTimeMillis();
-            // Optionally, you can play a sound or animation here
-        }
-    }
-
-    public void setSliceAttacking(boolean isSliceAttacking) {
-        this.isSliceAttacking = isSliceAttacking;
     }
 
     private void updateWeaponHitbox() {
@@ -226,6 +190,7 @@ public class Playing extends BaseState implements GameStateInterface {
     @Override
     public void render(Canvas c) {
         mapManager.draw(c);
+//        buildingManager.draw(c);
 
         drawPlayer(c);
 
@@ -344,8 +309,8 @@ public class Playing extends BaseState implements GameStateInterface {
         if (lastTouchDiff.y < 0)
             ySpeed *= -1;
 
-        int pWidth = GameConstants.Sprite.SIZE;
-        int pHeight = GameConstants.Sprite.SIZE;
+        int pWidth = (int) player.getHitbox().width();
+        int pHeight = (int) player.getHitbox().height();
 
         if (xSpeed <= 0)
             pWidth = 0;
@@ -380,6 +345,7 @@ public class Playing extends BaseState implements GameStateInterface {
     public void touchEvents(MotionEvent event) {
         playingUI.touchEvents(event);
     }
+
     private boolean isButtonTouched(MotionEvent motionEvent, CustomButton button){
         return button.getHitbox().contains(motionEvent.getX(), motionEvent.getY());
     }

@@ -109,7 +109,7 @@ public class PlayingUI {
                     }
                 } else if (isIn(eventPos, abilityButton)) { // Handle extra button press
                     if (abilityButtonPointerID < 0) {
-                        playing.setSliceAttacking(true);
+//                        playing.setSliceAttacking(true);
                         abilityButton.setPushed(true, pointerId);
                         abilityButtonPointerID = pointerId;
                     }
@@ -146,7 +146,7 @@ public class PlayingUI {
                         attackButtonPointerID = -1;
                     }
 
-                    if (pointerId == abilityButtonPointerID) { // Reset extra button
+                    if (pointerId == abilityButtonPointerID) {
                         abilityButton.unPush(pointerId);
                         abilityButtonPointerID = -1;
                     }
