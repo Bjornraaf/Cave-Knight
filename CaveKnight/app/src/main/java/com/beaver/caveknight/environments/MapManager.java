@@ -6,8 +6,12 @@ import android.graphics.RectF;
 
 import com.beaver.caveknight.entities.buildings.Building;
 import com.beaver.caveknight.entities.buildings.Buildings;
+import com.beaver.caveknight.entities.objects.GameObject;
+import com.beaver.caveknight.entities.objects.GameObjects;
+import com.beaver.caveknight.gamestates.Playing;
 import com.beaver.caveknight.helpers.GameConstants;
 import com.beaver.caveknight.helpers.HelpMethods;
+import com.beaver.caveknight.main.MainActivity;
 
 import java.util.ArrayList;
 
@@ -15,8 +19,10 @@ public class MapManager {
 
     private GameMap currentMap, outsideMap, insideMap;
     private float cameraX, cameraY;
+    private final Playing playing;
 
-    public MapManager() {
+    public MapManager(Playing playing) {
+        this.playing = playing;
         initTestMap();
     }
 
@@ -29,10 +35,7 @@ public class MapManager {
         if (x < 0 || y < 0)
             return false;
 
-        if (x >= getMaxWidthCurrentMap() || y >= getMaxHeightCurrentMap())
-            return false;
-
-        return true;
+        return !(x >= getMaxWidthCurrentMap()) && !(y >= getMaxHeightCurrentMap());
     }
 
     public int getMaxWidthCurrentMap() {
@@ -56,9 +59,17 @@ public class MapManager {
                 c.drawBitmap(currentMap.getFloorType().getSprite(currentMap.getSpriteID(i, j)), i * GameConstants.Sprite.SIZE + cameraX, j * GameConstants.Sprite.SIZE + cameraY, null);
     }
 
+    private void drawObjects(Canvas c) {
+        if (currentMap.getGameObjectArrayList() != null)
+            for (GameObject go : currentMap.getGameObjectArrayList())
+                c.drawBitmap(go.getObjectType().getObjectImg(), go.getHitbox().left + cameraX, go.getHitbox().top + cameraY, null);
+
+    }
+
     public void draw(Canvas c) {
         drawTiles(c);
         drawBuildings(c);
+        drawObjects(c);
     }
 
     public Doorway isPlayerOnDoorway(RectF playerHitbox) {
@@ -69,8 +80,17 @@ public class MapManager {
         return null;
     }
 
-    public void changeMap(GameMap gameMap) {
-        this.currentMap = gameMap;
+    public void changeMap(Doorway doorwayTarget) {
+        this.currentMap = doorwayTarget.getGameMapLocatedIn();
+
+        float cX = (float) MainActivity.GAME_WIDTH / 2 - doorwayTarget.getPosOfDoorway().x;
+        float cY = (float) MainActivity.GAME_HEIGHT / 2 - doorwayTarget.getPosOfDoorway().y;
+
+        playing.setCameraValues(new PointF(cX, cY));
+        cameraX = cX;
+        cameraY = cY;
+
+        playing.setDoorwayJustPassed(true);
     }
 
     private void initTestMap() {
@@ -110,17 +130,35 @@ public class MapManager {
                 {472, 475, 473, 394, 474, 475, 476}
         };
 
-
-
         ArrayList<Building> buildingArrayList = new ArrayList<>();
         buildingArrayList.add(new Building(new PointF(200, 200), Buildings.HOUSE_ONE));
         buildingArrayList.add(new Building(new PointF(700, 200), Buildings.CAVE_ONE));
 
-        insideMap = new GameMap(insideArray, MapTiles.INSIDE, null);
-        outsideMap = new GameMap(outsideArray, MapTiles.OUTSIDE, buildingArrayList);
+        ArrayList<GameObject> gameObjectArrayList = new ArrayList<>();
+        gameObjectArrayList.add(new GameObject(new PointF(600, 200), GameObjects.PILLAR_YELLOW));
+        gameObjectArrayList.add(new GameObject(new PointF(600, 400), GameObjects.STATUE_ANGRY_YELLOW));
+        gameObjectArrayList.add(new GameObject(new PointF(1000, 400), GameObjects.STATUE_ANGRY_YELLOW));
+        gameObjectArrayList.add(new GameObject(new PointF(200, 350), GameObjects.FROG_YELLOW));
+        gameObjectArrayList.add(new GameObject(new PointF(200, 550), GameObjects.FROG_GREEN));
+        gameObjectArrayList.add(new GameObject(new PointF(50, 50), GameObjects.BASKET_FULL_RED_FRUIT));
+        gameObjectArrayList.add(new GameObject(new PointF(400, 800), GameObjects.DARK_CRYSTAL_ROCK_1));
+        gameObjectArrayList.add(new GameObject(new PointF(800, 800), GameObjects.DARK_CRYSTAL_ROCK_2));
+        gameObjectArrayList.add(new GameObject(new PointF(1200, 800), GameObjects.DARK_CRYSTAL_ROCK_3));
 
-        HelpMethods.AddDoorwayToGameMap(outsideMap, insideMap, 1);
+
+        insideMap = new GameMap(insideArray, MapTiles.INSIDE, null, null,HelpMethods.GetSkeletonsRandomized(2, insideArray));
+        outsideMap = new GameMap(outsideArray, MapTiles.OUTSIDE, buildingArrayList, gameObjectArrayList, HelpMethods.GetSkeletonsRandomized(5, outsideArray));
+
+        HelpMethods.ConnectTwoDoorways(
+                outsideMap,
+                HelpMethods.CreateHitboxForDoorway(outsideMap, 1),
+                insideMap,
+                HelpMethods.CreateHitboxForDoorway(3, 6));
 
         currentMap = outsideMap;
+    }
+
+    public GameMap getCurrentMap() {
+        return currentMap;
     }
 }

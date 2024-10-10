@@ -16,17 +16,15 @@ import android.view.MotionEvent;
 import com.beaver.caveknight.entities.Character;
 import com.beaver.caveknight.entities.Player;
 import com.beaver.caveknight.entities.Weapons;
-import com.beaver.caveknight.entities.buildings.BuildingManager;
 import com.beaver.caveknight.entities.enemies.Skeleton;
 import com.beaver.caveknight.environments.Doorway;
 import com.beaver.caveknight.environments.MapManager;
 import com.beaver.caveknight.helpers.GameConstants;
+import com.beaver.caveknight.helpers.HelpMethods;
 import com.beaver.caveknight.helpers.interfaces.GameStateInterface;
 import com.beaver.caveknight.main.Game;
 import com.beaver.caveknight.ui.CustomButton;
 import com.beaver.caveknight.ui.PlayingUI;
-
-import java.util.ArrayList;
 
 public class Playing extends BaseState implements GameStateInterface {
     private float cameraX, cameraY;
@@ -44,20 +42,19 @@ public class Playing extends BaseState implements GameStateInterface {
     private long attackStartTime;
     private static final long ATTACK_DURATION = 350;
 
-    private final ArrayList<Skeleton> skeletons;
+//    private final ArrayList<Skeleton> skeletons;
 
     private final PlayingUI playingUI;
 
-
+    private boolean doorwayJustPassed;
 
     public Playing(Game game) {
         super(game);
 
-        mapManager = new MapManager();
+        mapManager = new MapManager(this);
         calculateStartCamera();
 
         player = new Player();
-        skeletons = new ArrayList<>();
 
         playingUI = new PlayingUI(this);
 
@@ -65,9 +62,6 @@ public class Playing extends BaseState implements GameStateInterface {
         redPaint.setStrokeWidth(2);
         redPaint.setStyle(Paint.Style.STROKE);
         redPaint.setColor(Color.RED);
-
-        for(int i = 0; i < 5; i++)
-            spawnSkeleton();
 
         updateWeaponHitbox();
     }
@@ -77,9 +71,6 @@ public class Playing extends BaseState implements GameStateInterface {
         cameraY = (float) GAME_HEIGHT / 2 - (float) mapManager.getMaxHeightCurrentMap() / 2;
     }
 
-    public void spawnSkeleton(){
-        skeletons.add(new Skeleton(new PointF(player.getHitbox().left - cameraX, player.getHitbox().top - cameraY)));
-    }
 
     @Override
     public void update(double delta) {
@@ -100,19 +91,27 @@ public class Playing extends BaseState implements GameStateInterface {
             }
         }
 
-        for (Skeleton skeleton : skeletons) {
+        for (Skeleton skeleton : mapManager.getCurrentMap().getSkeletonArrayList()) {
             if (skeleton.isActive()) {
-                skeleton.update(delta);
+                skeleton.update(delta, mapManager.getCurrentMap());
             }
         }
 
     }
 
+    public void setCameraValues(PointF cameraPos) {
+        this.cameraX = cameraPos.x;
+        this.cameraY = cameraPos.y;
+    }
+
     private void checkForDoorway() {
         Doorway doorwayPlayerIsOn = mapManager.isPlayerOnDoorway(player.getHitbox());
 
-        if (doorwayPlayerIsOn != null)
-            mapManager.changeMap(doorwayPlayerIsOn.getGameMap());
+        if (doorwayPlayerIsOn != null) {
+            if (!doorwayJustPassed)
+                mapManager.changeMap(doorwayPlayerIsOn.getDoorwayConnectedTo());
+        } else
+            doorwayJustPassed = false;
     }
 
     private void checkAttack() {
@@ -122,7 +121,7 @@ public class Playing extends BaseState implements GameStateInterface {
         attackBoxWithoutCamera.right -= cameraX;
         attackBoxWithoutCamera.bottom -= cameraY;
 
-        for (Skeleton s : skeletons)
+        for (Skeleton s : mapManager.getCurrentMap().getSkeletonArrayList())
             if (attackBoxWithoutCamera.intersects(s.getHitbox().left, s.getHitbox().top, s.getHitbox().right, s.getHitbox().bottom))
                 s.setActive(false);
 
@@ -194,7 +193,7 @@ public class Playing extends BaseState implements GameStateInterface {
 
         drawPlayer(c);
 
-        for (Skeleton skeleton : skeletons)
+        for (Skeleton skeleton : mapManager.getCurrentMap().getSkeletonArrayList())
             if (skeleton.isActive())
                 drawCharacter(c, skeleton);
 
@@ -286,8 +285,7 @@ public class Playing extends BaseState implements GameStateInterface {
     }
 
     private void updatePlayerMove(double delta) {
-        if (!movePlayer)
-            return;
+        if (!movePlayer) return;
 
         float baseSpeed = (float) (delta * 300);
         float ratio = Math.abs(lastTouchDiff.y) / Math.abs(lastTouchDiff.x);
@@ -304,26 +302,31 @@ public class Playing extends BaseState implements GameStateInterface {
             else player.setFaceDir(GameConstants.Face_Dir.UP);
         }
 
-        if (lastTouchDiff.x < 0)
-            xSpeed *= -1;
-        if (lastTouchDiff.y < 0)
-            ySpeed *= -1;
-
-        int pWidth = (int) player.getHitbox().width();
-        int pHeight = (int) player.getHitbox().height();
-
-        if (xSpeed <= 0)
-            pWidth = 0;
-        if (ySpeed <= 0)
-            pHeight = 0;
-
+        if (lastTouchDiff.x < 0) xSpeed *= -1;
+        if (lastTouchDiff.y < 0) ySpeed *= -1;
 
         float deltaX = xSpeed * baseSpeed * -1;
         float deltaY = ySpeed * baseSpeed * -1;
 
-        if (mapManager.canMoveHere(player.getHitbox().left + cameraX * -1 + deltaX * -1 + pWidth, player.getHitbox().top + cameraY * -1 + deltaY * -1 + pHeight)) {
+        float deltaCameraX = cameraX * -1 + deltaX * -1;
+        float deltaCameraY = cameraY * -1 + deltaY * -1;
+
+        if (HelpMethods.CanWalkHere(player.getHitbox(), deltaCameraX, deltaCameraY, mapManager.getCurrentMap())) {
             cameraX += deltaX;
             cameraY += deltaY;
+        } else {
+            if (HelpMethods.CanWalkHereUpDown(player.getHitbox(), deltaCameraY, cameraX * -1, mapManager.getCurrentMap())) {
+                cameraY += deltaY;
+            } else {
+                cameraY = HelpMethods.MoveNextToTileUpDown(player.getHitbox(), cameraY, deltaY);
+            }
+
+            if (HelpMethods.CanWalkHereLeftRight(player.getHitbox(), deltaCameraX, cameraY * -1, mapManager.getCurrentMap())) {
+                cameraX += deltaX;
+            } else {
+                cameraX = HelpMethods.MoveNextToTileLeftRight(player.getHitbox(), cameraX, deltaX);
+            }
+
         }
     }
 
@@ -360,4 +363,8 @@ public class Playing extends BaseState implements GameStateInterface {
     }
 
 
+    public void setDoorwayJustPassed(boolean doorwayJustPassed) {
+        this.doorwayJustPassed = doorwayJustPassed;
+
+    }
 }
