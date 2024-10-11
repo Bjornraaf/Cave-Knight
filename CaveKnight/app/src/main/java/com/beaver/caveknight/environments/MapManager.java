@@ -71,8 +71,8 @@ public class MapManager {
     public void changeMap(Doorway doorwayTarget) {
         this.currentMap = doorwayTarget.getGameMapLocatedIn();
 
-        float cX = (float) MainActivity.GAME_WIDTH / 2 - doorwayTarget.getPosOfDoorway().x;
-        float cY = (float) MainActivity.GAME_HEIGHT / 2 - doorwayTarget.getPosOfDoorway().y;
+        float cX = MainActivity.GAME_WIDTH / 2f - doorwayTarget.getPosOfDoorway().x + GameConstants.Sprite.HITBOX_SIZE / 2f;
+        float cY = MainActivity.GAME_HEIGHT / 2f - doorwayTarget.getPosOfDoorway().y + GameConstants.Sprite.HITBOX_SIZE / 2f;
 
         playing.setCameraValues(new PointF(cX, cY));
         cameraX = cX;

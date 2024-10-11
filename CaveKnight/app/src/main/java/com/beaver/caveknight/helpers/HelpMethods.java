@@ -28,10 +28,15 @@ public class HelpMethods {
     }
 
     public static PointF CreatePointForDoorway(int xTile, int yTile) {
-        float x = xTile * GameConstants.Sprite.SIZE;
-        float y = yTile * GameConstants.Sprite.SIZE;
+//        float x = xTile * GameConstants.Sprite.SIZE;
+//        float y = yTile * GameConstants.Sprite.SIZE;
+//
+//        return new PointF(x + 1, y + 1);
 
-        return new PointF(x + 1, y + 1);
+        float x = xTile * GameConstants.Sprite.SIZE + GameConstants.Sprite.SIZE / 2f;
+        float y = yTile * GameConstants.Sprite.SIZE + GameConstants.Sprite.SIZE / 2f;
+
+        return new PointF(x, y);
     }
 
     public static void ConnectTwoDoorways(GameMap gameMapOne, PointF pointOne, GameMap gameMapTwo, PointF pointTwo) {
