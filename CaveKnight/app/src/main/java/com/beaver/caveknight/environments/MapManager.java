@@ -46,30 +46,18 @@ public class MapManager {
         return currentMap.getArrayHeight() * GameConstants.Sprite.SIZE;
     }
 
-
-    public void drawBuildings(Canvas c) {
-        if (currentMap.getBuildingArrayList() != null)
-            for (Building b : currentMap.getBuildingArrayList())
-                c.drawBitmap(b.getBuildingType().getHouseImg(), b.getPos().x + cameraX, b.getPos().y + cameraY, null);
-    }
-
     public void drawTiles(Canvas c) {
         for (int j = 0; j < currentMap.getArrayHeight(); j++)
             for (int i = 0; i < currentMap.getArrayWidth(); i++)
                 c.drawBitmap(currentMap.getFloorType().getSprite(currentMap.getSpriteID(i, j)), i * GameConstants.Sprite.SIZE + cameraX, j * GameConstants.Sprite.SIZE + cameraY, null);
     }
 
-    private void drawObjects(Canvas c) {
-        if (currentMap.getGameObjectArrayList() != null)
-            for (GameObject go : currentMap.getGameObjectArrayList())
-                c.drawBitmap(go.getObjectType().getObjectImg(), go.getHitbox().left + cameraX, go.getHitbox().top + cameraY, null);
-
+    public void drawObject(Canvas c, GameObject go) {
+        c.drawBitmap(go.getObjectType().getObjectImg(), go.getHitbox().left + cameraX, go.getHitbox().top - go.getObjectType().getHitboxRoof() + cameraY, null);
     }
 
-    public void draw(Canvas c) {
-        drawTiles(c);
-        drawBuildings(c);
-        drawObjects(c);
+    public void drawBuilding(Canvas c, Building b) {
+        c.drawBitmap(b.getBuildingType().getHouseImg(), b.getPos().x + cameraX, b.getPos().y - b.getBuildingType().getHitboxRoof() + cameraY, null);
     }
 
     public Doorway isPlayerOnDoorway(RectF playerHitbox) {
@@ -132,18 +120,14 @@ public class MapManager {
 
         ArrayList<Building> buildingArrayList = new ArrayList<>();
         buildingArrayList.add(new Building(new PointF(200, 200), Buildings.HOUSE_ONE));
-        buildingArrayList.add(new Building(new PointF(700, 200), Buildings.CAVE_ONE));
+//        buildingArrayList.add(new Building(new PointF(700, 200), Buildings.CAVE_ONE));
 
         ArrayList<GameObject> gameObjectArrayList = new ArrayList<>();
-        gameObjectArrayList.add(new GameObject(new PointF(600, 200), GameObjects.PILLAR_YELLOW));
         gameObjectArrayList.add(new GameObject(new PointF(600, 400), GameObjects.STATUE_ANGRY_YELLOW));
         gameObjectArrayList.add(new GameObject(new PointF(1000, 400), GameObjects.STATUE_ANGRY_YELLOW));
-        gameObjectArrayList.add(new GameObject(new PointF(200, 350), GameObjects.FROG_YELLOW));
-        gameObjectArrayList.add(new GameObject(new PointF(200, 550), GameObjects.FROG_GREEN));
         gameObjectArrayList.add(new GameObject(new PointF(50, 50), GameObjects.BASKET_FULL_RED_FRUIT));
-        gameObjectArrayList.add(new GameObject(new PointF(400, 800), GameObjects.DARK_CRYSTAL_ROCK_1));
-        gameObjectArrayList.add(new GameObject(new PointF(800, 800), GameObjects.DARK_CRYSTAL_ROCK_2));
-        gameObjectArrayList.add(new GameObject(new PointF(1200, 800), GameObjects.DARK_CRYSTAL_ROCK_3));
+        gameObjectArrayList.add(new GameObject(new PointF(800, 800), GameObjects.OVEN_SNOW_YELLOW));
+        gameObjectArrayList.add(new GameObject(new PointF(800, 800), GameObjects.OVEN_SNOW_YELLOW));
 
 
         insideMap = new GameMap(insideArray, MapTiles.INSIDE, null, null,HelpMethods.GetSkeletonsRandomized(2, insideArray));
@@ -151,9 +135,9 @@ public class MapManager {
 
         HelpMethods.ConnectTwoDoorways(
                 outsideMap,
-                HelpMethods.CreateHitboxForDoorway(outsideMap, 1),
+                HelpMethods.CreatePointForDoorway(outsideMap, 0),
                 insideMap,
-                HelpMethods.CreateHitboxForDoorway(3, 6));
+                HelpMethods.CreatePointForDoorway(3, 6));
 
         currentMap = outsideMap;
     }

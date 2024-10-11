@@ -14,9 +14,6 @@ public class BuildingManager {
 
         buildingArrayList = new ArrayList<>();
         buildingArrayList.add(new Building(new PointF(200, 200), Buildings.HOUSE_ONE));
-//        buildingArrayList.add(new Building(new PointF(700, 200), Buildings.CAVE_ONE));
-
-
 
     }
 

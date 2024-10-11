@@ -14,9 +14,12 @@ import android.graphics.RectF;
 import android.view.MotionEvent;
 
 import com.beaver.caveknight.entities.Character;
+import com.beaver.caveknight.entities.Entity;
 import com.beaver.caveknight.entities.Player;
 import com.beaver.caveknight.entities.Weapons;
+import com.beaver.caveknight.entities.buildings.Building;
 import com.beaver.caveknight.entities.enemies.Skeleton;
+import com.beaver.caveknight.entities.objects.GameObject;
 import com.beaver.caveknight.environments.Doorway;
 import com.beaver.caveknight.environments.MapManager;
 import com.beaver.caveknight.helpers.GameConstants;
@@ -25,6 +28,8 @@ import com.beaver.caveknight.helpers.interfaces.GameStateInterface;
 import com.beaver.caveknight.main.Game;
 import com.beaver.caveknight.ui.CustomButton;
 import com.beaver.caveknight.ui.PlayingUI;
+
+import java.util.Arrays;
 
 public class Playing extends BaseState implements GameStateInterface {
     private float cameraX, cameraY;
@@ -42,11 +47,12 @@ public class Playing extends BaseState implements GameStateInterface {
     private long attackStartTime;
     private static final long ATTACK_DURATION = 350;
 
-//    private final ArrayList<Skeleton> skeletons;
-
     private final PlayingUI playingUI;
 
     private boolean doorwayJustPassed;
+
+    private Entity[] listOfDrawables;
+    private Boolean listOfEntitiesMade = false;
 
     public Playing(Game game) {
         super(game);
@@ -74,6 +80,7 @@ public class Playing extends BaseState implements GameStateInterface {
 
     @Override
     public void update(double delta) {
+        buildEntityList();
         updatePlayerMove(delta);
         player.update(delta, movePlayer);
         mapManager.setCameraValues(cameraX, cameraY);
@@ -97,6 +104,21 @@ public class Playing extends BaseState implements GameStateInterface {
             }
         }
 
+        sortArray();
+
+    }
+
+    private void buildEntityList() {
+        listOfDrawables = mapManager.getCurrentMap().getDrawableList();
+
+        listOfDrawables[listOfDrawables.length - 1] = player;
+
+        listOfEntitiesMade = true;
+    }
+
+    private void sortArray() {
+        player.setLastCameraValueY(cameraY);
+        Arrays.sort(listOfDrawables);
     }
 
     public void setCameraValues(PointF cameraPos) {
@@ -188,17 +210,27 @@ public class Playing extends BaseState implements GameStateInterface {
 
     @Override
     public void render(Canvas c) {
-        mapManager.draw(c);
-//        buildingManager.draw(c);
+        mapManager.drawTiles(c);
 
-        drawPlayer(c);
-
-        for (Skeleton skeleton : mapManager.getCurrentMap().getSkeletonArrayList())
-            if (skeleton.isActive())
-                drawCharacter(c, skeleton);
-
+        if (listOfEntitiesMade != null && listOfEntitiesMade) {
+            drawSortedEntities(c);
+        }
 
         playingUI.draw(c);
+    }
+
+    private void drawSortedEntities(Canvas c) {
+        for (Entity e : listOfDrawables) {
+            if (e instanceof Skeleton skeleton) {
+                if (skeleton.isActive()) drawCharacter(c, skeleton);
+            } else if (e instanceof GameObject gameObject) {
+                mapManager.drawObject(c, gameObject);
+            } else if (e instanceof Building building) {
+                mapManager.drawBuilding(c, building);
+            } else if (e instanceof Player) {
+                drawPlayer(c);
+            }
+        }
     }
 
     private void drawPlayer(Canvas c) {
@@ -314,19 +346,15 @@ public class Playing extends BaseState implements GameStateInterface {
         if (HelpMethods.CanWalkHere(player.getHitbox(), deltaCameraX, deltaCameraY, mapManager.getCurrentMap())) {
             cameraX += deltaX;
             cameraY += deltaY;
-        } else {
+        }
+        else {
             if (HelpMethods.CanWalkHereUpDown(player.getHitbox(), deltaCameraY, cameraX * -1, mapManager.getCurrentMap())) {
                 cameraY += deltaY;
-            } else {
-                cameraY = HelpMethods.MoveNextToTileUpDown(player.getHitbox(), cameraY, deltaY);
             }
 
             if (HelpMethods.CanWalkHereLeftRight(player.getHitbox(), deltaCameraX, cameraY * -1, mapManager.getCurrentMap())) {
                 cameraX += deltaX;
-            } else {
-                cameraX = HelpMethods.MoveNextToTileLeftRight(player.getHitbox(), cameraX, deltaX);
             }
-
         }
     }
 

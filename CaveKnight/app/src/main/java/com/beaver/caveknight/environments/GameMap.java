@@ -1,5 +1,6 @@
 package com.beaver.caveknight.environments;
 
+import com.beaver.caveknight.entities.Entity;
 import com.beaver.caveknight.entities.buildings.Building;
 import com.beaver.caveknight.entities.enemies.Skeleton;
 import com.beaver.caveknight.entities.objects.GameObject;
@@ -24,6 +25,36 @@ public class GameMap {
         this.gameObjectArrayList = gameObjectsArrayList;
         this.skeletonArrayList = skeletonArrayList;
         this.doorwayArrayList = new ArrayList<>();
+    }
+
+    public Entity[] getDrawableList() {
+        Entity[] list = new Entity[getDrawableAmount()];
+        int i = 0;
+
+        if (buildingArrayList != null)
+            for (Building b : buildingArrayList)
+                list[i++] = b;
+        if (skeletonArrayList != null)
+            for (Skeleton s : skeletonArrayList)
+                list[i++] = s;
+        if (gameObjectArrayList != null)
+            for (GameObject go : gameObjectArrayList)
+                list[i++] = go;
+
+        return list;
+    }
+
+    private int getDrawableAmount() {
+        int amount = 0;
+        if (buildingArrayList != null)
+            amount += buildingArrayList.size();
+        if (gameObjectArrayList != null)
+            amount += gameObjectArrayList.size();
+        if (skeletonArrayList != null)
+            amount += skeletonArrayList.size();
+        amount++; //Player
+
+        return amount;
     }
 
     public void addDoorway(Doorway doorway) {

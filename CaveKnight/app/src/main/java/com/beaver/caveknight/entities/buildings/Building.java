@@ -2,13 +2,17 @@ package com.beaver.caveknight.entities.buildings;
 
 import android.graphics.PointF;
 
-public class Building {
+import com.beaver.caveknight.entities.Entity;
 
-    private final PointF pos;
+public class Building extends Entity {
+
     private final Buildings buildingType;
 
     public Building(PointF pos, Buildings buildingType) {
-        this.pos = pos;
+        super(new PointF(pos.x, pos.y + buildingType.hitboxRoof),
+                buildingType.hitboxWidth,
+                buildingType.hitboxHeight
+        );
         this.buildingType = buildingType;
     }
 
@@ -17,6 +21,7 @@ public class Building {
     }
 
     public PointF getPos() {
-        return pos;
+        return new PointF(hitbox.left, hitbox.top);
     }
+
 }
