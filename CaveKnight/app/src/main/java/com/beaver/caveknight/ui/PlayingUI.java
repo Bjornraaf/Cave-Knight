@@ -103,7 +103,7 @@ public class PlayingUI {
                     touchDown = true;
                 } else if (isIn(eventPos, attackButton)) {
                     if (attackButtonPointerID < 0) {
-                        playing.setAttacking(true);
+                        playing.getPlayer().setAttacking(true);
                         attackButton.setPushed(true, pointerId);
                         attackButtonPointerID = pointerId;
                     }
@@ -141,7 +141,7 @@ public class PlayingUI {
                     homeButton.unPush(pointerId);
 
                     if (pointerId == attackButtonPointerID) {
-                        playing.setAttacking(false);
+                        playing.getPlayer().setAttacking(false);
                         attackButton.unPush(pointerId);
                         attackButtonPointerID = -1;
                     }

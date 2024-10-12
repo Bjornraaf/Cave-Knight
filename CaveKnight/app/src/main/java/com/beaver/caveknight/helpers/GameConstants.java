@@ -21,4 +21,8 @@ public final class GameConstants {
         public static final int SPEED = 10;
         public static final int AMOUNT = 4;
     }
+
+    public static final class Attack{
+        public static final long ATTACK_DURATION = 350;
+    }
 }

@@ -4,6 +4,8 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.RectF;
 
+import com.beaver.caveknight.entities.Player;
+import com.beaver.caveknight.entities.Character;
 import com.beaver.caveknight.entities.buildings.Building;
 import com.beaver.caveknight.entities.objects.GameObject;
 import com.beaver.caveknight.environments.Doorway;
@@ -239,5 +241,14 @@ public class HelpMethods {
             return (tileId == 394 || tileId < 374);
 
         return true;
+    }
+
+    public static boolean IsPlayerCloseForAttack(Character character, Player player, float cameraY, float cameraX) {
+        float xDelta = character.getHitbox().left  - (player.getHitbox().left - cameraX);
+        float yDelta = character.getHitbox().top - (player.getHitbox().top - cameraY);
+
+        float distance = (float) Math.hypot(xDelta, yDelta);
+
+        return distance < GameConstants.Sprite.SIZE * 1.5f;
     }
 }

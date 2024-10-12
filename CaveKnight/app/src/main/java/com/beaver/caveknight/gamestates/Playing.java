@@ -1,8 +1,7 @@
 package com.beaver.caveknight.gamestates;
 
-import static com.beaver.caveknight.helpers.GameConstants.Sprite.SCALE_MULTIPLIER;
+import static com.beaver.caveknight.helpers.GameConstants.Attack.ATTACK_DURATION;
 import static com.beaver.caveknight.helpers.GameConstants.Sprite.X_OFFSET;
-import static com.beaver.caveknight.helpers.GameConstants.Sprite.Y_OFFSET;
 import static com.beaver.caveknight.main.MainActivity.GAME_HEIGHT;
 import static com.beaver.caveknight.main.MainActivity.GAME_WIDTH;
 
@@ -26,7 +25,6 @@ import com.beaver.caveknight.helpers.GameConstants;
 import com.beaver.caveknight.helpers.HelpMethods;
 import com.beaver.caveknight.helpers.interfaces.GameStateInterface;
 import com.beaver.caveknight.main.Game;
-import com.beaver.caveknight.ui.CustomButton;
 import com.beaver.caveknight.ui.PlayingUI;
 
 import java.util.Arrays;
@@ -37,28 +35,20 @@ public class Playing extends BaseState implements GameStateInterface {
     private PointF lastTouchDiff;
 
     private final MapManager mapManager;
-
     private final Player player;
-    private final Paint redPaint;
-    private RectF weaponHitBox = null;
-
-    private boolean isAttacking;
-    private boolean isAttackChecked;
-    private long attackStartTime;
-    private static final long ATTACK_DURATION = 350;
-
     private final PlayingUI playingUI;
 
-    private boolean doorwayJustPassed;
+    private final Paint redPaint;
 
+    private boolean doorwayJustPassed;
     private Entity[] listOfDrawables;
-    private Boolean listOfEntitiesMade = false;
+    private boolean listOfEntitiesMade;
 
     public Playing(Game game) {
         super(game);
 
         mapManager = new MapManager(this);
-        calculateStartCamera();
+        calcStartCameraValues();
 
         player = new Player();
 
@@ -68,13 +58,11 @@ public class Playing extends BaseState implements GameStateInterface {
         redPaint.setStrokeWidth(2);
         redPaint.setStyle(Paint.Style.STROKE);
         redPaint.setColor(Color.RED);
-
-        updateWeaponHitbox();
     }
 
-    private void calculateStartCamera() {
-        cameraX = (float) GAME_WIDTH / 2 - (float) mapManager.getMaxWidthCurrentMap() / 2;
-        cameraY = (float) GAME_HEIGHT / 2 - (float) mapManager.getMaxHeightCurrentMap() / 2;
+    private void calcStartCameraValues() {
+        cameraX = GAME_WIDTH / 2f - mapManager.getMaxWidthCurrentMap() / 2f;
+        cameraY = GAME_HEIGHT / 2f - mapManager.getMaxHeightCurrentMap() / 2f;
     }
 
 
@@ -86,33 +74,41 @@ public class Playing extends BaseState implements GameStateInterface {
         mapManager.setCameraValues(cameraX, cameraY);
         checkForDoorway();
 
-        updateWeaponHitbox();
+        if (player.isAttacking()) {
+            if (!player.isAttackChecked()) {
+                checkPlayerAttack();
 
-        if (isAttacking) {
-            if (!isAttackChecked) {
-                checkAttack();
             }
-            if (System.currentTimeMillis() - attackStartTime >= ATTACK_DURATION) {
-                setAttacking(false);
+            if (System.currentTimeMillis() - player.getAttackStartTime() >= ATTACK_DURATION) {
+                player.setAttacking(false);
                 playingUI.getAttackButton().setPushed(false);
             }
         }
 
-        for (Skeleton skeleton : mapManager.getCurrentMap().getSkeletonArrayList()) {
+
+        for (Skeleton skeleton : mapManager.getCurrentMap().getSkeletonArrayList())
             if (skeleton.isActive()) {
                 skeleton.update(delta, mapManager.getCurrentMap());
+                if (skeleton.isAttacking()) {
+                    if (!skeleton.isAttackChecked()) {
+                        checkEnemyAttack(skeleton);
+                    }
+                } else if (!skeleton.isPreparingAttack()) {
+                    if (HelpMethods.IsPlayerCloseForAttack(skeleton, player, cameraY, cameraX)) {
+                        skeleton.prepareAttack(player, cameraX, cameraY);
+                    }
+                }
             }
-        }
+
 
         sortArray();
 
     }
 
+
     private void buildEntityList() {
         listOfDrawables = mapManager.getCurrentMap().getDrawableList();
-
         listOfDrawables[listOfDrawables.length - 1] = player;
-
         listOfEntitiesMade = true;
     }
 
@@ -130,14 +126,34 @@ public class Playing extends BaseState implements GameStateInterface {
         Doorway doorwayPlayerIsOn = mapManager.isPlayerOnDoorway(player.getHitbox());
 
         if (doorwayPlayerIsOn != null) {
-            if (!doorwayJustPassed)
-                mapManager.changeMap(doorwayPlayerIsOn.getDoorwayConnectedTo());
-        } else
-            doorwayJustPassed = false;
+            if (!doorwayJustPassed) mapManager.changeMap(doorwayPlayerIsOn.getDoorwayConnectedTo());
+        } else doorwayJustPassed = false;
+
     }
 
-    private void checkAttack() {
-        RectF attackBoxWithoutCamera = new RectF(weaponHitBox);
+    public void setDoorwayJustPassed(boolean doorwayJustPassed) {
+        this.doorwayJustPassed = doorwayJustPassed;
+    }
+
+
+    private void checkEnemyAttack(Character character) {
+        character.updateWepHitbox();
+        RectF playerHitbox = new RectF(player.getHitbox());
+        playerHitbox.left -= cameraX;
+        playerHitbox.top -= cameraY;
+        playerHitbox.right -= cameraX;
+        playerHitbox.bottom -= cameraY;
+        if (RectF.intersects(character.getAttackBox(), playerHitbox)) {
+            System.out.println("Enemy Hit Player!");
+        } else {
+            System.out.println("Enemy Missed Player!");
+        }
+        character.setAttackChecked(true);
+    }
+
+    private void checkPlayerAttack() {
+
+        RectF attackBoxWithoutCamera = new RectF(player.getAttackBox());
         attackBoxWithoutCamera.left -= cameraX;
         attackBoxWithoutCamera.top -= cameraY;
         attackBoxWithoutCamera.right -= cameraX;
@@ -147,74 +163,15 @@ public class Playing extends BaseState implements GameStateInterface {
             if (attackBoxWithoutCamera.intersects(s.getHitbox().left, s.getHitbox().top, s.getHitbox().right, s.getHitbox().bottom))
                 s.setActive(false);
 
-        isAttackChecked = true;
+        player.setAttackChecked(true);
     }
 
-    private void updateWeaponHitbox() {
-        PointF pos = getWeaponPosition();
-        float width = getWeaponWidth();
-        float height = getWeaponHeight();
-
-        weaponHitBox = new RectF(pos.x, pos.y, pos.x + width, pos.y + height);
-
-    }
-
-    private float getWeaponWidth() {
-        return switch (player.getFaceDir()){
-
-            case GameConstants.Face_Dir.UP, GameConstants.Face_Dir.DOWN ->
-                    Weapons.BIG_SWORD.getWidth();
-
-            case GameConstants.Face_Dir.LEFT, GameConstants.Face_Dir.RIGHT ->
-                    Weapons.BIG_SWORD.getHeight();
-
-            default -> throw new IllegalStateException("Unexpected value: " + player.getFaceDir());
-        };
-    }
-
-    private float getWeaponHeight() {
-        return switch (player.getFaceDir()){
-
-            case GameConstants.Face_Dir.UP, GameConstants.Face_Dir.DOWN ->
-                    Weapons.BIG_SWORD.getHeight();
-
-            case GameConstants.Face_Dir.LEFT, GameConstants.Face_Dir.RIGHT ->
-                    Weapons.BIG_SWORD.getWidth();
-
-            default -> throw new IllegalStateException("Unexpected value: " + player.getFaceDir());
-        };
-    }
-
-    private PointF getWeaponPosition() {
-        return switch (player.getFaceDir()) {
-
-            case GameConstants.Face_Dir.UP ->
-                    new PointF(player.getHitbox().left - 0.5f * GameConstants.Sprite.SCALE_MULTIPLIER,
-                            player.getHitbox().top - Weapons.BIG_SWORD.getHeight() - Y_OFFSET);
-
-            case GameConstants.Face_Dir.DOWN ->
-                    new PointF(player.getHitbox().left + 0.75f * GameConstants.Sprite.SCALE_MULTIPLIER,
-                            player.getHitbox().bottom);
-
-            case GameConstants.Face_Dir.LEFT ->
-                    new PointF(player.getHitbox().left - Weapons.BIG_SWORD.getHeight() - X_OFFSET,
-                            player.getHitbox().bottom - Weapons.BIG_SWORD.getWidth() - 0.75f * GameConstants.Sprite.SCALE_MULTIPLIER);
-
-            case GameConstants.Face_Dir.RIGHT ->
-                    new PointF(player.getHitbox().right + X_OFFSET,
-                            player.getHitbox().bottom - Weapons.BIG_SWORD.getWidth() - 0.75f * GameConstants.Sprite.SCALE_MULTIPLIER);
-
-            default -> throw new IllegalStateException("Unexpected value: " + player.getFaceDir());
-        };
-    }
 
     @Override
     public void render(Canvas c) {
         mapManager.drawTiles(c);
-
-        if (listOfEntitiesMade != null && listOfEntitiesMade) {
+        if (listOfEntitiesMade)
             drawSortedEntities(c);
-        }
 
         playingUI.draw(c);
     }
@@ -233,91 +190,40 @@ public class Playing extends BaseState implements GameStateInterface {
         }
     }
 
+
     private void drawPlayer(Canvas c) {
-        c.drawBitmap(Weapons.SHADOW.getWeaponImg(),
-                player.getHitbox().left,
-                player.getHitbox().bottom - 5 * SCALE_MULTIPLIER,
-                null);
-
-        c.drawBitmap(
-                player.getGameCharType().getSprite(getAnimIndex(), player.getFaceDir()),
-                player.getHitbox().left - X_OFFSET,
-                player.getHitbox().top - Y_OFFSET,
-                null);
-
+        c.drawBitmap(Weapons.SHADOW.getWeaponImg(), player.getHitbox().left, player.getHitbox().bottom - 5 * GameConstants.Sprite.SCALE_MULTIPLIER, null);
+        c.drawBitmap(player.getGameCharType().getSprite(player.getAnimIndex(), player.getFaceDirection()), player.getHitbox().left - X_OFFSET, player.getHitbox().top - GameConstants.Sprite.Y_OFFSET, null);
         c.drawRect(player.getHitbox(), redPaint);
-
-        if (isAttacking){
-            drawWeapons(c);
-        }
-
+        if (player.isAttacking()) drawWeapon(c, player);
     }
 
-    private int getAnimIndex(){
-        if(isAttacking) return 4;
-        return player.getAnimIndex();
+
+    private void drawWeapon(Canvas c, Character character) {
+        c.rotate(character.getWeaponRotation(), character.getAttackBox().left, character.getAttackBox().top);
+        c.drawBitmap(Weapons.BIG_SWORD.getWeaponImg(), character.getAttackBox().left + character.weaponRotationAdjustLeft(), character.getAttackBox().top + character.weaponRotationAdjustTop(), null);
+        c.rotate(character.getWeaponRotation() * -1, character.getAttackBox().left, character.getAttackBox().top);
     }
 
-    private void drawWeapons(Canvas c) {
-        c.rotate(getWeaponRotation(), weaponHitBox.left, weaponHitBox.top);
-
-        c.drawBitmap(Weapons.BIG_SWORD.getWeaponImg(),
-                weaponHitBox.left + weaponRotationLeft(),
-                weaponHitBox.top + weaponRotationTop(),
-                null);
-
-        c.rotate(getWeaponRotation() * -1, weaponHitBox.left, weaponHitBox.top);
-
-        c.drawRect(weaponHitBox, redPaint);
+    private void drawEnemyWeapon(Canvas c, Character character) {
+        c.rotate(character.getWeaponRotation(), character.getAttackBox().left + cameraX, character.getAttackBox().top + cameraY);
+        c.drawBitmap(Weapons.BIG_SWORD.getWeaponImg(), character.getAttackBox().left + cameraX + character.weaponRotationAdjustLeft(), character.getAttackBox().top + cameraY + character.weaponRotationAdjustTop(), null);
+        c.rotate(character.getWeaponRotation() * -1, character.getAttackBox().left + cameraX, character.getAttackBox().top + cameraY);
     }
 
-    private float weaponRotationTop() {
-        return switch (player.getFaceDir()){
-            case GameConstants.Face_Dir.LEFT, GameConstants.Face_Dir.UP ->
-                    - Weapons.BIG_SWORD.getHeight();
-            default -> 0;
-        };
-    }
-
-    private float weaponRotationLeft() {
-        return switch (player.getFaceDir()){
-            case GameConstants.Face_Dir.UP, GameConstants.Face_Dir.RIGHT ->
-                    - Weapons.BIG_SWORD.getWidth();
-            default -> 0;
-        };
-    }
-
-    private float getWeaponRotation() {
-        return switch (player.getFaceDir()){
-            case GameConstants.Face_Dir.LEFT -> 90;
-            case GameConstants.Face_Dir.UP -> 180;
-            case GameConstants.Face_Dir.RIGHT -> 270;
-
-            default -> 0;
-        };
-    }
 
     public void drawCharacter(Canvas canvas, Character c) {
-        canvas.drawBitmap(Weapons.SHADOW.getWeaponImg(),
-                c.getHitbox().left + cameraX,
-                c.getHitbox().bottom - 5 * SCALE_MULTIPLIER + cameraY,
-                null);
+        canvas.drawBitmap(Weapons.SHADOW.getWeaponImg(), c.getHitbox().left + cameraX, c.getHitbox().bottom - 5 * GameConstants.Sprite.SCALE_MULTIPLIER + cameraY, null);
+        canvas.drawBitmap(c.getGameCharType().getSprite(c.getAnimIndex(), c.getFaceDirection()), c.getHitbox().left + cameraX - X_OFFSET, c.getHitbox().top + cameraY - GameConstants.Sprite.Y_OFFSET, null);
+        canvas.drawRect(c.getHitbox().left + cameraX, c.getHitbox().top + cameraY, c.getHitbox().right + cameraX, c.getHitbox().bottom + cameraY, redPaint);
 
-        canvas.drawBitmap(
-                c.getGameCharType().getSprite(c.getAnimIndex(), c.getFaceDir()),
-                c.getHitbox().left + cameraX - X_OFFSET,
-                c.getHitbox().top + cameraY - Y_OFFSET,
-                null);
-
-        canvas.drawRect(c.getHitbox().left + cameraX,
-                c.getHitbox().top + cameraY,
-                c.getHitbox().right + cameraX,
-                c.getHitbox().bottom + cameraY,
-                redPaint);
+        if (c.isAttacking())
+            drawEnemyWeapon(canvas, c);
     }
 
     private void updatePlayerMove(double delta) {
-        if (!movePlayer) return;
+
+        if (!movePlayer || player.isAttacking()) return;
 
         float baseSpeed = (float) (delta * 300);
         float ratio = Math.abs(lastTouchDiff.y) / Math.abs(lastTouchDiff.x);
@@ -327,11 +233,11 @@ public class Playing extends BaseState implements GameStateInterface {
         float ySpeed = (float) Math.sin(angle);
 
         if (xSpeed > ySpeed) {
-            if (lastTouchDiff.x > 0) player.setFaceDir(GameConstants.Face_Dir.RIGHT);
-            else player.setFaceDir(GameConstants.Face_Dir.LEFT);
+            if (lastTouchDiff.x > 0) player.setFaceDirection(GameConstants.Face_Dir.RIGHT);
+            else player.setFaceDirection(GameConstants.Face_Dir.LEFT);
         } else {
-            if (lastTouchDiff.y > 0) player.setFaceDir(GameConstants.Face_Dir.DOWN);
-            else player.setFaceDir(GameConstants.Face_Dir.UP);
+            if (lastTouchDiff.y > 0) player.setFaceDirection(GameConstants.Face_Dir.DOWN);
+            else player.setFaceDirection(GameConstants.Face_Dir.UP);
         }
 
         if (lastTouchDiff.x < 0) xSpeed *= -1;
@@ -346,19 +252,16 @@ public class Playing extends BaseState implements GameStateInterface {
         if (HelpMethods.CanWalkHere(player.getHitbox(), deltaCameraX, deltaCameraY, mapManager.getCurrentMap())) {
             cameraX += deltaX;
             cameraY += deltaY;
-        }
-        else {
-            if (HelpMethods.CanWalkHereUpDown(player.getHitbox(), deltaCameraY, cameraX * -1, mapManager.getCurrentMap())) {
+        } else {
+            if (HelpMethods.CanWalkHereUpDown(player.getHitbox(), deltaCameraY, cameraX * -1, mapManager.getCurrentMap()))
                 cameraY += deltaY;
-            }
 
-            if (HelpMethods.CanWalkHereLeftRight(player.getHitbox(), deltaCameraX, cameraY * -1, mapManager.getCurrentMap())) {
+            if (HelpMethods.CanWalkHereLeftRight(player.getHitbox(), deltaCameraX, cameraY * -1, mapManager.getCurrentMap()))
                 cameraX += deltaX;
-            }
         }
     }
 
-    public void setGameStateToMainMenu(){
+    public void setGameStateToMainMenu() {
         game.setCurrentGameState(Game.GameState.MENU);
     }
 
@@ -377,22 +280,7 @@ public class Playing extends BaseState implements GameStateInterface {
         playingUI.touchEvents(event);
     }
 
-    private boolean isButtonTouched(MotionEvent motionEvent, CustomButton button){
-        return button.getHitbox().contains(motionEvent.getX(), motionEvent.getY());
-    }
-
-    public void setAttacking(boolean isAttacking) {
-        this.isAttacking = isAttacking;
-        if (isAttacking) {
-            attackStartTime = System.currentTimeMillis(); // Record when the attack starts
-        } else {
-            isAttackChecked = false;
-        }
-    }
-
-
-    public void setDoorwayJustPassed(boolean doorwayJustPassed) {
-        this.doorwayJustPassed = doorwayJustPassed;
-
+    public Player getPlayer() {
+        return player;
     }
 }

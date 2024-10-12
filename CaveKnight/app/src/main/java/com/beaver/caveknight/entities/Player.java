@@ -14,5 +14,6 @@ public class Player extends Character {
     public void update(double delta, boolean movePlayer) {
         if (movePlayer)
             updateAnimation();
+        updateWepHitbox();
     }
 }
