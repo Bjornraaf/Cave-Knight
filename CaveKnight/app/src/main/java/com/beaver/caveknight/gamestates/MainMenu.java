@@ -101,8 +101,4 @@ public class MainMenu extends BaseState implements GameStateInterface {
             exitButton.setPushed(false);
         }
     }
-
-    private boolean isButtonTouched(MotionEvent motionEvent, CustomButton button){
-        return button.getHitbox().contains(motionEvent.getX(), motionEvent.getY());
-    }
 }

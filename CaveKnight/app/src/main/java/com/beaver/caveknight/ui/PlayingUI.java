@@ -7,29 +7,36 @@ import android.graphics.PointF;
 import android.view.MotionEvent;
 
 import com.beaver.caveknight.gamestates.Playing;
+import com.beaver.caveknight.main.Game;
 
 public class PlayingUI {
 
     private final Playing playing;
 
-    //For UI
+    //UI
     private final PointF joystickPosition = new PointF(250, 800);
     private final PointF attackButtonPosition = new PointF(1700, 800);
     private final float radius = 150;
     private final Paint circlePaint;
 
-    //For Multitouch
+    //Buttons
+    private final CustomButton homeButton;
+    private final CustomButton attackButton;
+    private final CustomButton abilityButton;
+
+    //Multitouch
     private int joystickPointerId = -1;
     private int attackButtonPointerID = -1;
     private int abilityButtonPointerID = -1;
     private boolean touchDown;
 
-    private final CustomButton homeButton;
-    private final CustomButton attackButton;
-    private final CustomButton abilityButton; // New button
+    private final int maxPlayerHealth = 300;
+    private int currentPlayerHealth;
 
     public PlayingUI(Playing playing) {
         this.playing = playing;
+
+        currentPlayerHealth = maxPlayerHealth;
 
         circlePaint = new Paint();
         circlePaint.setColor(Color.RED);
@@ -65,6 +72,40 @@ public class PlayingUI {
                 abilityButton.getHitbox().left + 25,
                 abilityButton.getHitbox().top + 25,
                 null);
+
+        drawHealth(c);
+    }
+
+    private void drawHealth(Canvas c) {
+        for (int i = 0; i < maxPlayerHealth / 100; i++) {
+
+            int healthIconX = 175;
+            int healthIconY = 25;
+
+            int x = healthIconX + 100 * i;
+            int heartValue = currentPlayerHealth - 100 * i;
+
+            if (heartValue < 100) {
+                if (heartValue <= 0)
+                    c.drawBitmap(HealthIcons.HEART_EMPTY.getHealthIcon(), x, healthIconY, null);
+                else if (heartValue == 25)
+                    c.drawBitmap(HealthIcons.HEART_1Q.getHealthIcon(), x, healthIconY, null);
+                else if (heartValue == 50)
+                    c.drawBitmap(HealthIcons.HEART_HALF.getHealthIcon(), x, healthIconY, null);
+                else
+                    c.drawBitmap(HealthIcons.HEART_3Q.getHealthIcon(), x, healthIconY, null);
+            } else
+                c.drawBitmap(HealthIcons.HEART_FULL.getHealthIcon(), x, healthIconY, null);
+        }
+    }
+
+    public void damagePlayer(int damage) {
+        this.currentPlayerHealth -= damage;
+        if (currentPlayerHealth <= 0) {
+            System.out.println("Player Deaded!");
+            playing.getGame().setCurrentGameState(Game.GameState.DEATH_SCREEN);
+            resetPlayerHealth();
+        }
     }
 
     private boolean isInsideRadius(PointF eventPos, PointF circle) {
@@ -107,7 +148,7 @@ public class PlayingUI {
                         attackButton.setPushed(true, pointerId);
                         attackButtonPointerID = pointerId;
                     }
-                } else if (isIn(eventPos, abilityButton)) { // Handle extra button press
+                } else if (isIn(eventPos, abilityButton)) {
                     if (abilityButtonPointerID < 0) {
 //                        playing.setSliceAttacking(true);
                         abilityButton.setPushed(true, pointerId);
@@ -171,5 +212,9 @@ public class PlayingUI {
 
     public CustomButton getAbilityButton() {
         return abilityButton;
+    }
+
+    public void resetPlayerHealth() {
+        this.currentPlayerHealth = maxPlayerHealth;
     }
 }

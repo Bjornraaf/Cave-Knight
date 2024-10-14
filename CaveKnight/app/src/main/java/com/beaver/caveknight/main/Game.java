@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
+import com.beaver.caveknight.gamestates.DeathScreen;
 import com.beaver.caveknight.gamestates.MainMenu;
 import com.beaver.caveknight.gamestates.Playing;
 
@@ -13,8 +14,9 @@ public class Game {
     private final SurfaceHolder holder;
     private MainMenu mainMenu;
     private Playing playing;
+    private DeathScreen deathScreen;
     private final GameLoop gameLoop;
-    private GameState currentGameState = GameState.MENU;
+    private GameState currentGameState = GameState.DEATH_SCREEN;
 
     public Game(SurfaceHolder holder) {
         this.holder = holder;
@@ -27,6 +29,7 @@ public class Game {
         switch (currentGameState) {
             case MENU -> mainMenu.update(delta);
             case PLAYING -> playing.update(delta);
+            case DEATH_SCREEN -> deathScreen.update(delta);
         }
     }
 
@@ -38,6 +41,7 @@ public class Game {
         switch (currentGameState) {
             case MENU -> mainMenu.render(c);
             case PLAYING -> playing.render(c);
+            case DEATH_SCREEN -> deathScreen.render(c);
         }
 
         holder.unlockCanvasAndPost(c);
@@ -46,12 +50,14 @@ public class Game {
     private void initGameStates() {
         mainMenu = new MainMenu(this);
         playing = new Playing(this);
+        deathScreen = new DeathScreen(this);
     }
 
     public boolean touchEvent(MotionEvent event) {
         switch (currentGameState) {
             case MENU -> mainMenu.touchEvents(event);
             case PLAYING -> playing.touchEvents(event);
+            case DEATH_SCREEN -> deathScreen.touchEvents(event);
         }
 
         return true;
@@ -62,11 +68,7 @@ public class Game {
     }
 
     public enum GameState {
-        MENU, PLAYING
-    }
-
-    public GameState getCurrentGameState() {
-        return currentGameState;
+        MENU, PLAYING, DEATH_SCREEN
     }
 
     public void setCurrentGameState(GameState currentGameState) {
@@ -74,4 +76,15 @@ public class Game {
 
     }
 
+    public DeathScreen getDeathScreen() {
+        return deathScreen;
+    }
+
+    public Playing getPlaying() {
+        return playing;
+    }
+
+    public MainMenu getMainMenu() {
+        return mainMenu;
+    }
 }

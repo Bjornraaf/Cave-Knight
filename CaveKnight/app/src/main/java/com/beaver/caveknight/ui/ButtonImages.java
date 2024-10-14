@@ -11,6 +11,8 @@ public enum ButtonImages implements BitmapMethods {
     MENU_START(R.drawable.mainmenu_startbutton, 300, 140),
     MENU_OPTIONS(R.drawable.mainmenu_button_options, 300, 140),
     MENU_EXIT(R.drawable.mainmenu_button_exit, 300, 140),
+    MENU_MENU(R.drawable.mainmenu_button_menu, 300, 140),
+    MENU_REPLAY(R.drawable.mainmenu_button_replay, 300, 140),
     HOME_BUTTON(R.drawable.game_homebutton, 140, 140),
     ATTACK_BUTTON(R.drawable.attackbutton, 210, 210),
     ABILITY_BUTTON(R.drawable.ablitybutton, 210, 210);
