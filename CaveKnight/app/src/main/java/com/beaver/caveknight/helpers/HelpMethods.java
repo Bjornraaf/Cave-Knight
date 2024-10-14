@@ -25,16 +25,11 @@ public class HelpMethods {
         float y = building.getPos().y;
         PointF point = gameMapLocatedIn.getBuildingArrayList().get(buildingIndex).getBuildingType().getDoorwayPoint();
 
-        return new PointF(point.x + x, point.y + y);
+        return new PointF(point.x + x, point.y + y - building.getBuildingType().getHitboxRoof());
 
     }
 
     public static PointF CreatePointForDoorway(int xTile, int yTile) {
-//        float x = xTile * GameConstants.Sprite.SIZE;
-//        float y = yTile * GameConstants.Sprite.SIZE;
-//
-//        return new PointF(x + 1, y + 1);
-
         float x = xTile * GameConstants.Sprite.SIZE + GameConstants.Sprite.SIZE / 2f;
         float y = yTile * GameConstants.Sprite.SIZE + GameConstants.Sprite.SIZE / 2f;
 

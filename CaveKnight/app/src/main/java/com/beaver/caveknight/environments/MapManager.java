@@ -17,7 +17,7 @@ import java.util.ArrayList;
 
 public class MapManager {
 
-    private GameMap currentMap, outsideMap, insideMap;
+    private GameMap currentMap;
     private float cameraX, cameraY;
     private final Playing playing;
 
@@ -108,35 +108,31 @@ public class MapManager {
                 {454, 275, 279, 275, 275, 275, 279, 275, 275, 275, 275, 275, 275, 275, 297, 110, 44, 45, 45, 45, 45, 45, 46, 110, 132, 275, 279, 275, 275, 275, 275, 454}
         };
 
-        int[][] insideArray = {
+        int[][] insideCaveArray = {
                 {384, 387, 387, 387, 387, 387, 388},
-                {406,  275, 276, 276, 276, 277, 410},
-                {406,  297, 298, 298, 298, 299, 410},
-                {406,  297, 298, 298, 298, 299, 410},
-                {406,  297, 298, 298, 298, 299, 410},
-                {406,  319, 320, 320, 320, 321, 410},
+                {406, 298, 298, 298, 298, 298, 410},
+                {406, 298, 298, 298, 298, 298, 410},
+                {406, 298, 298, 298, 298, 298, 410},
+                {406, 298, 298, 298, 298, 298, 410},
+                {406, 298, 298, 298, 298, 298, 410},
                 {472, 475, 473, 394, 474, 475, 476}
         };
 
         ArrayList<Building> buildingArrayList = new ArrayList<>();
-        buildingArrayList.add(new Building(new PointF(200, 200), Buildings.HOUSE_ONE));
-//        buildingArrayList.add(new Building(new PointF(700, 200), Buildings.CAVE_ONE));
+        buildingArrayList.add(new Building(new PointF(1150, 250), Buildings.CAVE_TWO_GRAY));
 
         ArrayList<GameObject> gameObjectArrayList = new ArrayList<>();
-        gameObjectArrayList.add(new GameObject(new PointF(600, 400), GameObjects.STATUE_ANGRY_YELLOW));
-        gameObjectArrayList.add(new GameObject(new PointF(1000, 400), GameObjects.STATUE_ANGRY_YELLOW));
-        gameObjectArrayList.add(new GameObject(new PointF(50, 50), GameObjects.BASKET_FULL_RED_FRUIT));
-        gameObjectArrayList.add(new GameObject(new PointF(800, 800), GameObjects.OVEN_SNOW_YELLOW));
-        gameObjectArrayList.add(new GameObject(new PointF(800, 800), GameObjects.OVEN_SNOW_YELLOW));
+        // Rocks next to CAVE_TWO_GRAY
+        gameObjectArrayList.add(new GameObject(new PointF(1000, 400), GameObjects.ANGULAR_GRAY_ROCK_1));
+        gameObjectArrayList.add(new GameObject(new PointF(1400, 400), GameObjects.ANGULAR_GRAY_ROCK_1));
 
-
-        insideMap = new GameMap(insideArray, MapTiles.INSIDE, null, null,HelpMethods.GetSkeletonsRandomized(2, insideArray));
-        outsideMap = new GameMap(outsideArray, MapTiles.OUTSIDE, buildingArrayList, gameObjectArrayList, HelpMethods.GetSkeletonsRandomized(5, outsideArray));
+        GameMap insideCaveMap = new GameMap(insideCaveArray, MapTiles.INSIDE, null, null, HelpMethods.GetSkeletonsRandomized(2, insideCaveArray));
+        GameMap outsideMap = new GameMap(outsideArray, MapTiles.OUTSIDE, buildingArrayList, gameObjectArrayList, HelpMethods.GetSkeletonsRandomized(5, outsideArray));
 
         HelpMethods.ConnectTwoDoorways(
                 outsideMap,
                 HelpMethods.CreatePointForDoorway(outsideMap, 0),
-                insideMap,
+                insideCaveMap,
                 HelpMethods.CreatePointForDoorway(3, 6));
 
         currentMap = outsideMap;

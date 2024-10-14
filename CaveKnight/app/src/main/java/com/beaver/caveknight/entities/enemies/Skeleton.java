@@ -13,7 +13,7 @@ import java.util.Random;
 
 public class Skeleton extends Character {
     private long lastDirChange = System.currentTimeMillis();
-    private Random rand = new Random();
+    private final Random random = new Random();
     private boolean moving = true, preparingAttack;
     private long timerBeforeAttack, timerAttackDuration;
     private long timeToAttack = 500, timeForAttackDuration = 250;
@@ -83,7 +83,7 @@ public class Skeleton extends Character {
 
     private void updateMove(double delta, GameMap gameMap) {
         if (System.currentTimeMillis() - lastDirChange >= 3000) {
-            faceDirection = rand.nextInt(4);
+            faceDirection = random.nextInt(4);
             lastDirChange = System.currentTimeMillis();
         }
 
