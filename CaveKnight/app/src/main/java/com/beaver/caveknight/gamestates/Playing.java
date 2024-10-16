@@ -1,5 +1,6 @@
 package com.beaver.caveknight.gamestates;
 
+import static com.beaver.caveknight.environments.WaveManager.setWavesSurvived;
 import static com.beaver.caveknight.helpers.GameConstants.Attack.ATTACK_DURATION;
 import static com.beaver.caveknight.helpers.GameConstants.Sprite.X_OFFSET;
 import static com.beaver.caveknight.main.MainActivity.GAME_HEIGHT;
@@ -23,6 +24,7 @@ import com.beaver.caveknight.environments.Doorway;
 import com.beaver.caveknight.environments.MapManager;
 import com.beaver.caveknight.helpers.GameConstants;
 import com.beaver.caveknight.helpers.HelpMethods;
+import com.beaver.caveknight.helpers.ScoreManager;
 import com.beaver.caveknight.helpers.interfaces.GameStateInterface;
 import com.beaver.caveknight.main.Game;
 import com.beaver.caveknight.ui.PlayingUI;
@@ -35,6 +37,8 @@ public class Playing extends BaseState implements GameStateInterface {
     private PointF lastTouchDiff;
 
     private final MapManager mapManager;
+    private final ScoreManager scoreManager;
+
     private final Player player;
     private final PlayingUI playingUI;
 
@@ -50,6 +54,7 @@ public class Playing extends BaseState implements GameStateInterface {
         super(game);
 
         mapManager = new MapManager(this);
+        this.scoreManager = new ScoreManager();
         calcStartCameraValues();
 
         player = new Player();
@@ -84,6 +89,7 @@ public class Playing extends BaseState implements GameStateInterface {
 
     @Override
     public void update(double delta) {
+        mapManager.getWaveManager().update(delta);
         buildEntityList();
         updatePlayerMove(delta);
         player.update(delta, movePlayer);
@@ -141,11 +147,13 @@ public class Playing extends BaseState implements GameStateInterface {
         Doorway doorwayPlayerIsOn = mapManager.isPlayerOnDoorway(player.getHitbox());
 
         if (doorwayPlayerIsOn != null) {
-            if (!doorwayJustPassed) mapManager.changeMap(doorwayPlayerIsOn.getDoorwayConnectedTo());
-        } else doorwayJustPassed = false;
-
+            if (!doorwayJustPassed && !mapManager.getWaveManager().isWaveActive()) {
+                mapManager.changeMap(doorwayPlayerIsOn.getDoorwayConnectedTo());
+            }
+        } else {
+            doorwayJustPassed = false;
+        }
     }
-
     public void setDoorwayJustPassed(boolean doorwayJustPassed) {
         this.doorwayJustPassed = doorwayJustPassed;
     }
@@ -172,6 +180,8 @@ public class Playing extends BaseState implements GameStateInterface {
         if (player.getCurrentHealth() > 0)
             return;
 
+        ScoreManager.setFinalScore(scoreManager.getScore());
+        setWavesSurvived(mapManager.getWaveManager().getWaveCount());
         game.setCurrentGameState(Game.GameState.DEATH_SCREEN);
         reset();
     }
@@ -188,6 +198,7 @@ public class Playing extends BaseState implements GameStateInterface {
                 if (attackBoxWithoutCamera.intersects(s.getHitbox().left, s.getHitbox().top, s.getHitbox().right, s.getHitbox().bottom)){
                     s.damageCharacter(player.getDamage());
                     if (s.getCurrentHealth() <= 0){
+                        scoreManager.incrementScore(5);
                         s.setSkeletonInactive();
                     }
                 }
@@ -204,6 +215,8 @@ public class Playing extends BaseState implements GameStateInterface {
             drawSortedEntities(c);
 
         playingUI.draw(c);
+        playingUI.drawScore(c);
+        mapManager.getWaveManager().announceWave(c);
     }
 
     private void drawSortedEntities(Canvas c) {
@@ -343,18 +356,20 @@ public class Playing extends BaseState implements GameStateInterface {
 
     public void reset() {
 
-        // Reset player state
-        player.reset();  // Ensure the Player class has a reset method to reset health, position, etc.
+        player.reset();
 
-        // Reset the map manager, entities, etc.
-        mapManager.reset(); // Reset or reload the map
+        mapManager.reset();
 
-        // Reset camera position
         calcStartCameraValues();
 
-        // Reset other necessary flags
+        scoreManager.resetScore();
+
         movePlayer = false;
         doorwayJustPassed = false;
         listOfEntitiesMade = false;
+    }
+
+    public ScoreManager getScoreManager() {
+        return this.scoreManager;
     }
 }

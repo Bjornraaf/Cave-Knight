@@ -1,6 +1,7 @@
 package com.beaver.caveknight.entities.enemies;
 
 import android.graphics.PointF;
+import android.graphics.RectF;
 
 import com.beaver.caveknight.entities.Character;
 import com.beaver.caveknight.entities.GameCharacters;
@@ -132,5 +133,10 @@ public class Skeleton extends Character {
 
     public void setSkeletonInactive() {
         active = false;
+        hitbox.set(0, 0, 0, 0);
+    }
+
+    public RectF getHitbox() {
+        return active ? super.getHitbox() : new RectF(0, 0, 0, 0);
     }
 }

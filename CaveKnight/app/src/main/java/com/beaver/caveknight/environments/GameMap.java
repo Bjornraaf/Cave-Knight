@@ -16,7 +16,7 @@ public class GameMap {
     private final ArrayList<Building> buildingArrayList;
     private final ArrayList<GameObject> gameObjectArrayList;
     private final ArrayList<Doorway> doorwayArrayList;
-    private final ArrayList<Skeleton> skeletonArrayList;
+    private ArrayList<Skeleton> skeletonArrayList;
 
     public GameMap(int[][] spriteIds, MapTiles mapTilesType, ArrayList<Building> buildingArrayList, ArrayList<GameObject> gameObjectsArrayList, ArrayList<Skeleton> skeletonArrayList) {
         this.spriteIds = spriteIds;
@@ -101,4 +101,17 @@ public class GameMap {
     public float getMapHeight() {
         return getArrayHeight() * GameConstants.Sprite.SIZE;
     }
+
+    public int[][] getSpriteIds() {
+        return spriteIds;
+    }
+
+    public void addSkeletons(ArrayList<Skeleton> skeletons) {
+        if (this.skeletonArrayList == null) {
+            this.skeletonArrayList = new ArrayList<>();
+        }
+        this.skeletonArrayList.addAll(skeletons);
+    }
+
+
 }

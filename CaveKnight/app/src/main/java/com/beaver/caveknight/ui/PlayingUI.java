@@ -20,6 +20,8 @@ public class PlayingUI {
     private final float radius = 150;
     private final Paint circlePaint;
 
+    private final Paint scorePaint;
+
     //Buttons
     private final CustomButton homeButton;
     private final CustomButton attackButton;
@@ -31,6 +33,8 @@ public class PlayingUI {
     private int abilityButtonPointerID = -1;
     private boolean touchDown;
 
+
+
     public PlayingUI(Playing playing) {
         this.playing = playing;
 
@@ -38,6 +42,10 @@ public class PlayingUI {
         circlePaint.setColor(Color.RED);
         circlePaint.setStrokeWidth(5);
         circlePaint.setStyle(Paint.Style.STROKE);
+
+        scorePaint = new Paint();
+        scorePaint.setColor(Color.WHITE);
+        scorePaint.setTextSize(50);
 
         homeButton = new CustomButton(5,5, ButtonImages.HOME_BUTTON.getWidth(), ButtonImages.HOME_BUTTON.getHeight());
 
@@ -97,13 +105,12 @@ public class PlayingUI {
         }
     }
 
-//    public void damagePlayer(int damage) {
-//        this.currentPlayerHealth -= damage;
-//        if (currentPlayerHealth <= 0) {
-//            playing.getGame().setCurrentGameState(Game.GameState.DEATH_SCREEN);
-//            resetPlayerHealth();
-//        }
-//    }
+    public void drawScore(Canvas c) {
+        String scoreText = "Score: " + playing.getScoreManager().getScore();
+        scorePaint.setColor(Color.WHITE);
+        scorePaint.setTextSize(75);
+        c.drawText(scoreText, c.getWidth() - 400, 100, scorePaint);
+    }
 
     private boolean isInsideRadius(PointF eventPos, PointF circle) {
         float a = Math.abs(eventPos.x - circle.x);

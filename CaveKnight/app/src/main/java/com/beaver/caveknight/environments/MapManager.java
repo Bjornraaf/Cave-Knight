@@ -18,13 +18,15 @@ import java.util.ArrayList;
 public class MapManager {
 
     private GameMap currentMap;
-    private GameMap outsideMap;
+    private final WaveManager waveManager;
+
     private float cameraX, cameraY;
     private final Playing playing;
 
     public MapManager(Playing playing) {
         this.playing = playing;
         initTestMap();
+        waveManager = new WaveManager(5, 5);
     }
 
     public void setCameraValues(float cameraX, float cameraY) {
@@ -70,7 +72,13 @@ public class MapManager {
     }
 
     public void changeMap(Doorway doorwayTarget) {
+        if (waveManager.isWaveActive()) {
+            System.out.println("You cannot leave during an active wave!");
+            return;
+        }
+
         this.currentMap = doorwayTarget.getGameMapLocatedIn();
+        waveManager.startWave(currentMap);
 
         float cX = MainActivity.GAME_WIDTH / 2f - doorwayTarget.getPosOfDoorway().x + GameConstants.Sprite.HITBOX_SIZE / 2f;
         float cY = MainActivity.GAME_HEIGHT / 2f - doorwayTarget.getPosOfDoorway().y + GameConstants.Sprite.HITBOX_SIZE / 2f;
@@ -127,8 +135,8 @@ public class MapManager {
         gameObjectArrayList.add(new GameObject(new PointF(1000, 400), GameObjects.ANGULAR_GRAY_ROCK_1));
         gameObjectArrayList.add(new GameObject(new PointF(1400, 400), GameObjects.ANGULAR_GRAY_ROCK_1));
 
-        GameMap insideCaveMap = new GameMap(insideCaveArray, MapTiles.INSIDE, null, null, HelpMethods.GetSkeletonsRandomized(2, insideCaveArray));
-        outsideMap = new GameMap(outsideArray, MapTiles.OUTSIDE, buildingArrayList, gameObjectArrayList, HelpMethods.GetSkeletonsRandomized(5, outsideArray));
+        GameMap insideCaveMap = new GameMap(insideCaveArray, MapTiles.INSIDE, null, null, null);
+        GameMap outsideMap = new GameMap(outsideArray, MapTiles.OUTSIDE, buildingArrayList, gameObjectArrayList, null);
 
         HelpMethods.ConnectTwoDoorways(
                 outsideMap,
@@ -145,6 +153,10 @@ public class MapManager {
 
     public void reset() {
         initTestMap();
+        waveManager.stopWave();
+    }
 
+    public WaveManager getWaveManager() {
+        return waveManager;
     }
 }
