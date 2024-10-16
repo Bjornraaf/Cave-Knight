@@ -18,6 +18,7 @@ import java.util.ArrayList;
 public class MapManager {
 
     private GameMap currentMap;
+    private GameMap outsideMap;
     private float cameraX, cameraY;
     private final Playing playing;
 
@@ -127,7 +128,7 @@ public class MapManager {
         gameObjectArrayList.add(new GameObject(new PointF(1400, 400), GameObjects.ANGULAR_GRAY_ROCK_1));
 
         GameMap insideCaveMap = new GameMap(insideCaveArray, MapTiles.INSIDE, null, null, HelpMethods.GetSkeletonsRandomized(2, insideCaveArray));
-        GameMap outsideMap = new GameMap(outsideArray, MapTiles.OUTSIDE, buildingArrayList, gameObjectArrayList, HelpMethods.GetSkeletonsRandomized(5, outsideArray));
+        outsideMap = new GameMap(outsideArray, MapTiles.OUTSIDE, buildingArrayList, gameObjectArrayList, HelpMethods.GetSkeletonsRandomized(5, outsideArray));
 
         HelpMethods.ConnectTwoDoorways(
                 outsideMap,
@@ -140,5 +141,10 @@ public class MapManager {
 
     public GameMap getCurrentMap() {
         return currentMap;
+    }
+
+    public void reset() {
+        initTestMap();
+
     }
 }

@@ -207,4 +207,6 @@ public abstract class Character extends Entity {
 
         return attackDamage;
     }
+
+
 }

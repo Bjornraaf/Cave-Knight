@@ -79,6 +79,7 @@ public class MainMenu extends BaseState implements GameStateInterface {
 
     @Override
     public void touchEvents(MotionEvent event) {
+
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             if (isButtonTouched(event, startButton)) {
                 startButton.setPushed(true);

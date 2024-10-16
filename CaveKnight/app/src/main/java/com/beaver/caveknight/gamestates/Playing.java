@@ -173,7 +173,7 @@ public class Playing extends BaseState implements GameStateInterface {
             return;
 
         game.setCurrentGameState(Game.GameState.DEATH_SCREEN);
-        player.resetCharacterHealth();
+        reset();
     }
 
     private void checkPlayerAttack() {
@@ -339,5 +339,22 @@ public class Playing extends BaseState implements GameStateInterface {
 
     public PlayingUI getPlayingUI() {
         return playingUI;
+    }
+
+    public void reset() {
+
+        // Reset player state
+        player.reset();  // Ensure the Player class has a reset method to reset health, position, etc.
+
+        // Reset the map manager, entities, etc.
+        mapManager.reset(); // Reset or reload the map
+
+        // Reset camera position
+        calcStartCameraValues();
+
+        // Reset other necessary flags
+        movePlayer = false;
+        doorwayJustPassed = false;
+        listOfEntitiesMade = false;
     }
 }
