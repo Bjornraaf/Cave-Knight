@@ -20,7 +20,10 @@ public abstract class Character extends Entity {
     protected boolean  isAttackChecked;
     private long attackStartTime;
     private RectF attackBox = null;
-    private int attackDamage;
+    private final int attackDamage;
+
+    private int maxHealth;
+    private int currentHealth;
 
     public Character(PointF pos, GameCharacters gameCharType) {
         super(pos, HITBOX_SIZE, HITBOX_SIZE);
@@ -28,6 +31,27 @@ public abstract class Character extends Entity {
         attackDamage = setAttackDamage();
 
         updateWepHitbox();
+    }
+
+    protected void setStartHealth(int health) {
+        maxHealth = health;
+        currentHealth = maxHealth;
+    }
+
+    public void resetCharacterHealth() {
+        currentHealth = maxHealth;
+    }
+
+    public void damageCharacter(int damage) {
+        this.currentHealth -= damage;
+    }
+
+    public int getMaxHealth() {
+        return maxHealth;
+    }
+
+    public int getCurrentHealth() {
+        return currentHealth;
     }
 
     private int setAttackDamage() {

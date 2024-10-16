@@ -16,7 +16,7 @@ public class Game {
     private Playing playing;
     private DeathScreen deathScreen;
     private final GameLoop gameLoop;
-    private GameState currentGameState = GameState.DEATH_SCREEN;
+    private GameState currentGameState = GameState.MAINMENU;
 
     public Game(SurfaceHolder holder) {
         this.holder = holder;
@@ -27,7 +27,7 @@ public class Game {
     public void update(double delta) {
 
         switch (currentGameState) {
-            case MENU -> mainMenu.update(delta);
+            case MAINMENU -> mainMenu.update(delta);
             case PLAYING -> playing.update(delta);
             case DEATH_SCREEN -> deathScreen.update(delta);
         }
@@ -39,7 +39,7 @@ public class Game {
 
         //Draw the game
         switch (currentGameState) {
-            case MENU -> mainMenu.render(c);
+            case MAINMENU -> mainMenu.render(c);
             case PLAYING -> playing.render(c);
             case DEATH_SCREEN -> deathScreen.render(c);
         }
@@ -55,7 +55,7 @@ public class Game {
 
     public boolean touchEvent(MotionEvent event) {
         switch (currentGameState) {
-            case MENU -> mainMenu.touchEvents(event);
+            case MAINMENU -> mainMenu.touchEvents(event);
             case PLAYING -> playing.touchEvents(event);
             case DEATH_SCREEN -> deathScreen.touchEvents(event);
         }
@@ -68,7 +68,7 @@ public class Game {
     }
 
     public enum GameState {
-        MENU, PLAYING, DEATH_SCREEN
+        MAINMENU, PLAYING, DEATH_SCREEN
     }
 
     public void setCurrentGameState(GameState currentGameState) {

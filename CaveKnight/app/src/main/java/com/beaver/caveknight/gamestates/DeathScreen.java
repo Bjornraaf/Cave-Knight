@@ -72,7 +72,7 @@ public class DeathScreen extends BaseState implements GameStateInterface {
                 }
             } else if (isButtonTouched(event, btnMainMenu)) {
                 if (btnMainMenu.isPushed()) {
-                    game.setCurrentGameState(Game.GameState.MENU);
+                    game.setCurrentGameState(Game.GameState.MAINMENU);
                 }
             }
 

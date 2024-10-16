@@ -144,11 +144,20 @@ public class Playing extends BaseState implements GameStateInterface {
         playerHitbox.bottom -= cameraY;
         if (RectF.intersects(character.getAttackBox(), playerHitbox)) {
             System.out.println("Enemy Hit Player!");
-            playingUI.damagePlayer(character.getDamage());
+            player.damageCharacter(character.getDamage());
+            checkPlayerDead();
         } else {
             System.out.println("Enemy Missed Player!");
         }
         character.setAttackChecked(true);
+    }
+
+    private void checkPlayerDead() {
+        if (player.getCurrentHealth() > 0)
+            return;
+
+        game.setCurrentGameState(Game.GameState.DEATH_SCREEN);
+        player.resetCharacterHealth();
     }
 
     private void checkPlayerAttack() {
@@ -262,7 +271,7 @@ public class Playing extends BaseState implements GameStateInterface {
     }
 
     public void setGameStateToMainMenu() {
-        game.setCurrentGameState(Game.GameState.MENU);
+        game.setCurrentGameState(Game.GameState.MAINMENU);
     }
 
     public void setPlayerMoveTrue(PointF lastTouchDiff) {

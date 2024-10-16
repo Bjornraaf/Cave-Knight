@@ -6,6 +6,7 @@ import android.graphics.Paint;
 import android.graphics.PointF;
 import android.view.MotionEvent;
 
+import com.beaver.caveknight.entities.Player;
 import com.beaver.caveknight.gamestates.Playing;
 import com.beaver.caveknight.main.Game;
 
@@ -30,13 +31,8 @@ public class PlayingUI {
     private int abilityButtonPointerID = -1;
     private boolean touchDown;
 
-    private final int maxPlayerHealth = 300;
-    private int currentPlayerHealth;
-
     public PlayingUI(Playing playing) {
         this.playing = playing;
-
-        currentPlayerHealth = maxPlayerHealth;
 
         circlePaint = new Paint();
         circlePaint.setColor(Color.RED);
@@ -77,13 +73,15 @@ public class PlayingUI {
     }
 
     private void drawHealth(Canvas c) {
-        for (int i = 0; i < maxPlayerHealth / 100; i++) {
+        Player player = playing.getPlayer();
+
+        for (int i = 0; i < player.getMaxHealth() / 100; i++) {
 
             int healthIconX = 175;
             int healthIconY = 25;
 
             int x = healthIconX + 100 * i;
-            int heartValue = currentPlayerHealth - 100 * i;
+            int heartValue = player.getCurrentHealth() - 100 * i;
 
             if (heartValue < 100) {
                 if (heartValue <= 0)
@@ -99,14 +97,13 @@ public class PlayingUI {
         }
     }
 
-    public void damagePlayer(int damage) {
-        this.currentPlayerHealth -= damage;
-        if (currentPlayerHealth <= 0) {
-            System.out.println("Player Deaded!");
-            playing.getGame().setCurrentGameState(Game.GameState.DEATH_SCREEN);
-            resetPlayerHealth();
-        }
-    }
+//    public void damagePlayer(int damage) {
+//        this.currentPlayerHealth -= damage;
+//        if (currentPlayerHealth <= 0) {
+//            playing.getGame().setCurrentGameState(Game.GameState.DEATH_SCREEN);
+//            resetPlayerHealth();
+//        }
+//    }
 
     private boolean isInsideRadius(PointF eventPos, PointF circle) {
         float a = Math.abs(eventPos.x - circle.x);
@@ -214,7 +211,4 @@ public class PlayingUI {
         return abilityButton;
     }
 
-    public void resetPlayerHealth() {
-        this.currentPlayerHealth = maxPlayerHealth;
-    }
 }
