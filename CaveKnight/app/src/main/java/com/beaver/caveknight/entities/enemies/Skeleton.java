@@ -16,11 +16,11 @@ public class Skeleton extends Character {
     private final Random random = new Random();
     private boolean moving = true, preparingAttack;
     private long timerBeforeAttack, timerAttackDuration;
-    private long timeToAttack = 500, timeForAttackDuration = 250;
 
 
     public Skeleton(PointF pos) {
         super(pos, GameCharacters.SKELETON);
+        setStartHealth(100);
     }
 
     public void update(double delta, GameMap gameMap) {
@@ -66,6 +66,7 @@ public class Skeleton extends Character {
     }
 
     private void updateAttackTimer() {
+        long timeForAttackDuration = 250;
         if (timerAttackDuration + timeForAttackDuration < System.currentTimeMillis()) {
             setAttacking(false);
             resetAnimation();
@@ -74,6 +75,7 @@ public class Skeleton extends Character {
     }
 
     private void checkTimeToAttackTimer() {
+        long timeToAttack = 500;
         if (timerBeforeAttack + timeToAttack < System.currentTimeMillis()) {
             setAttacking(true);
             preparingAttack = false;
@@ -126,5 +128,9 @@ public class Skeleton extends Character {
 
     public boolean isPreparingAttack() {
         return preparingAttack;
+    }
+
+    public void setSkeletonInactive() {
+        active = false;
     }
 }

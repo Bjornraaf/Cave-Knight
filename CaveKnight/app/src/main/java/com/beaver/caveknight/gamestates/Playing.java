@@ -39,6 +39,8 @@ public class Playing extends BaseState implements GameStateInterface {
     private final PlayingUI playingUI;
 
     private final Paint redPaint;
+    private final Paint healthBarRed;
+    private final Paint healthBarBlack;
 
     private boolean doorwayJustPassed;
     private Entity[] listOfDrawables;
@@ -58,6 +60,20 @@ public class Playing extends BaseState implements GameStateInterface {
         redPaint.setStrokeWidth(2);
         redPaint.setStyle(Paint.Style.STROKE);
         redPaint.setColor(Color.RED);
+
+        healthBarRed = new Paint();
+        healthBarBlack = new Paint();
+        initHealthBars();
+    }
+
+    private void initHealthBars() {
+        healthBarRed.setStrokeWidth(10);
+        healthBarRed.setStyle(Paint.Style.STROKE);
+        healthBarRed.setColor(Color.RED);
+        healthBarBlack.setStrokeWidth(14);
+        healthBarBlack.setStyle(Paint.Style.STROKE);
+        healthBarBlack.setColor(Color.BLACK);
+
     }
 
     private void calcStartCameraValues() {
@@ -169,8 +185,13 @@ public class Playing extends BaseState implements GameStateInterface {
         attackBoxWithoutCamera.bottom -= cameraY;
         if (mapManager.getCurrentMap().getSkeletonArrayList() != null)
             for (Skeleton s : mapManager.getCurrentMap().getSkeletonArrayList())
-                if (attackBoxWithoutCamera.intersects(s.getHitbox().left, s.getHitbox().top, s.getHitbox().right, s.getHitbox().bottom))
-                    s.setActive(false);
+                if (attackBoxWithoutCamera.intersects(s.getHitbox().left, s.getHitbox().top, s.getHitbox().right, s.getHitbox().bottom)){
+                    s.damageCharacter(player.getDamage());
+                    if (s.getCurrentHealth() <= 0){
+                        s.setSkeletonInactive();
+                    }
+                }
+
 
         player.setAttackChecked(true);
     }
@@ -228,7 +249,30 @@ public class Playing extends BaseState implements GameStateInterface {
 
         if (c.isAttacking())
             drawEnemyWeapon(canvas, c);
+
+        if (c.getCurrentHealth() < c.getMaxHealth()){
+            drawHealthBar(canvas, c);
+        }
     }
+
+    private void drawHealthBar(Canvas canvas, Character c) {
+        canvas.drawLine(c.getHitbox().left + cameraX,
+                c.getHitbox().top + cameraY - 5 * GameConstants.Sprite.SCALE_MULTIPLIER,
+                c.getHitbox().right + cameraX,
+                c.getHitbox().top + cameraY - 5 * GameConstants.Sprite.SCALE_MULTIPLIER, healthBarBlack);
+
+        float fullBarWidth = c.getHitbox().width();
+        float percentOfMaxHealth = (float) c.getCurrentHealth() / c.getMaxHealth();
+        float barWidth = fullBarWidth * percentOfMaxHealth;
+        float xDelta = (fullBarWidth - barWidth) / 2.0f;
+
+
+        canvas.drawLine(c.getHitbox().left + cameraX + xDelta,
+                c.getHitbox().top + cameraY - 5 * GameConstants.Sprite.SCALE_MULTIPLIER,
+                c.getHitbox().left + cameraX + xDelta + barWidth,
+                c.getHitbox().top + cameraY - 5 * GameConstants.Sprite.SCALE_MULTIPLIER, healthBarRed);
+    }
+
 
     private void updatePlayerMove(double delta) {
 
