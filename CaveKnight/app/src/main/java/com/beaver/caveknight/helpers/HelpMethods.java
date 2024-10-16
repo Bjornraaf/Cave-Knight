@@ -45,23 +45,32 @@ public class HelpMethods {
         doorwayTwo.connectDoorway(doorwayOne);
     }
 
-
-    public static ArrayList<Skeleton> GetSkeletonsRandomized(int amount, int[][] gameMapArray) {
-
-        int width = (gameMapArray[0].length - 1) * GameConstants.Sprite.SIZE;
-        int height = (gameMapArray.length - 1) * GameConstants.Sprite.SIZE;
-
+    public static ArrayList<Skeleton> GetSkeletonsRandomized(int amount, int[][] gameMapArray, GameMap gameMap) {
         ArrayList<Skeleton> skeletonArrayList = new ArrayList<>();
+        float buffer = GameConstants.Sprite.SIZE; // Buffer size to avoid collisions
 
         for (int i = 0; i < amount; i++) {
-            float x = (float) (Math.random() * width);
-            float y = (float) (Math.random() * height);
-            skeletonArrayList.add(new Skeleton(new PointF(x, y)));
+            boolean isValidPosition = false;
+            PointF position = null;
+
+            while (!isValidPosition) {
+                float x = (float) (Math.random() * (gameMapArray[0].length - 1) * GameConstants.Sprite.SIZE);
+                float y = (float) (Math.random() * (gameMapArray.length - 1) * GameConstants.Sprite.SIZE);
+
+                position = new PointF(x, y);
+
+                if (HelpMethods.CanWalkHere(position.x + buffer, position.y, gameMap) &&
+                        HelpMethods.CanWalkHere(position.x - buffer, position.y, gameMap) &&
+                        HelpMethods.CanWalkHere(position.x, position.y + buffer, gameMap) &&
+                        HelpMethods.CanWalkHere(position.x, position.y - buffer, gameMap)) {
+                    isValidPosition = true;
+                }
+            }
+
+            skeletonArrayList.add(new Skeleton(position));
         }
 
-
         return skeletonArrayList;
-
     }
 
     public static float MoveNextToTileUpDown(RectF hitbox, float cameraY, float deltaY) {

@@ -57,9 +57,8 @@ public class WaveManager {
         waveCount++;
         announcementText = "WAVE " + waveCount;
         announcementStartTime = System.currentTimeMillis();
-        ArrayList<Skeleton> skeletons = HelpMethods.GetSkeletonsRandomized(skeletonsPerWave * waveCount, currentMap.getSpriteIds());
+        ArrayList<Skeleton> skeletons = HelpMethods.GetSkeletonsRandomized(skeletonsPerWave * waveCount, currentMap.getSpriteIds(), currentMap);
         currentMap.addSkeletons(skeletons);
-
     }
 
     public void announceWave(Canvas c) {
