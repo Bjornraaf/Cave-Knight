@@ -100,7 +100,6 @@ public class Playing extends BaseState implements GameStateInterface {
         if (player.isAttacking()) {
             if (!player.isAttackChecked()) {
                 checkPlayerAttack();
-
             }
             if (System.currentTimeMillis() - player.getAttackStartTime() >= ATTACK_DURATION) {
                 player.setAttacking(false);
@@ -108,41 +107,25 @@ public class Playing extends BaseState implements GameStateInterface {
             }
         }
 
-        if (mapManager.getCurrentMap().getEnemyArrayList() != null)
-            for (Character enemy : mapManager.getCurrentMap().getEnemyArrayList())
-                if (enemy instanceof Skeleton skeleton) {
-                    if (skeleton.isActive()) {
-                        skeleton.update(delta, mapManager.getCurrentMap());
-                        if (skeleton.isAttacking()) {
-                            if (!skeleton.isAttackChecked()) {
-                                checkEnemyAttack(skeleton);
-                            }
-                        } else if (!skeleton.isPreparingAttack()) {
-                            if (HelpMethods.IsPlayerCloseForAttack(skeleton, player, cameraY, cameraX)) {
-                                skeleton.prepareAttack(player, cameraX, cameraY);
-                            }
+        if (mapManager.getCurrentMap().getEnemyArrayList() != null) {
+            for (Character enemy : mapManager.getCurrentMap().getEnemyArrayList()) {
+                if (enemy.isActive()) {
+                    enemy.update(delta, mapManager.getCurrentMap());
+
+                    if (enemy.isAttacking()) {
+                        if (!enemy.isAttackChecked()) {
+                            checkEnemyAttack(enemy);
+                        }
+                    } else if (!enemy.isPreparingAttack()) {
+                        if (HelpMethods.IsPlayerCloseForAttack(enemy, player, cameraY, cameraX)) {
+                            enemy.prepareAttack(player, cameraX, cameraY);
                         }
                     }
                 }
-        if (mapManager.getCurrentMap().getEnemyArrayList() != null)
-            for (Character enemy : mapManager.getCurrentMap().getEnemyArrayList())
-                if (enemy instanceof Archer archer) {
-                    if (archer.isActive()) {
-                        archer.update(delta, mapManager.getCurrentMap());
-                        if (archer.isAttacking()) {
-                            if (!archer.isAttackChecked()) {
-                                checkEnemyAttack(archer);
-                            }
-                        } else if (!archer.isPreparingAttack()) {
-                            if (HelpMethods.IsPlayerCloseForAttack(archer, player, cameraY, cameraX)) {
-                                archer.prepareAttack(player, cameraX, cameraY);
-                            }
-                        }
-                    }
-                }
+            }
+        }
 
         sortArray();
-
     }
 
 
@@ -206,35 +189,23 @@ public class Playing extends BaseState implements GameStateInterface {
     }
 
     private void checkPlayerAttack() {
-
         RectF attackBoxWithoutCamera = new RectF(player.getAttackBox());
         attackBoxWithoutCamera.left -= cameraX;
         attackBoxWithoutCamera.top -= cameraY;
         attackBoxWithoutCamera.right -= cameraX;
         attackBoxWithoutCamera.bottom -= cameraY;
-        if (mapManager.getCurrentMap().getEnemyArrayList() != null)
+
+        if (mapManager.getCurrentMap().getEnemyArrayList() != null) {
             for (Character enemy : mapManager.getCurrentMap().getEnemyArrayList()) {
-                if (enemy instanceof Skeleton skeleton) {
-                    if (attackBoxWithoutCamera.intersects(skeleton.getHitbox().left, skeleton.getHitbox().top, skeleton.getHitbox().right, skeleton.getHitbox().bottom)) {
-                        skeleton.damageCharacter(player.getDamage());
-                        if (skeleton.getCurrentHealth() <= 0) {
-                            scoreManager.incrementScore(5);
-                            skeleton.setSkeletonInactive();
-                        }
-                    }
-                }
-                if (enemy instanceof Archer archer) {
-                    if (attackBoxWithoutCamera.intersects(archer.getHitbox().left, archer.getHitbox().top, archer.getHitbox().right, archer.getHitbox().bottom)) {
-                        archer.damageCharacter(player.getDamage());
-                        if (archer.getCurrentHealth() <= 0) {
-                            scoreManager.incrementScore(5);
-                            archer.setArcherInactive();
-                        }
+                if (attackBoxWithoutCamera.intersects(enemy.getHitbox().left, enemy.getHitbox().top, enemy.getHitbox().right, enemy.getHitbox().bottom)) {
+                    enemy.damageCharacter(player.getDamage());
+                    if (enemy.getCurrentHealth() <= 0) {
+                        scoreManager.incrementScore(enemy.getCoinValue());
+                        enemy.setInactive();
                     }
                 }
             }
-
-
+        }
 
         player.setAttackChecked(true);
     }

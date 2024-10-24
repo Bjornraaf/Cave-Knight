@@ -38,6 +38,7 @@ public class Archer extends Character {
         }
     }
 
+    @Override
     public void prepareAttack(Player player, float cameraX, float cameraY) {
         timerBeforeAttack = System.currentTimeMillis();
         preparingAttack = true;
@@ -45,7 +46,8 @@ public class Archer extends Character {
         turnTowardsPlayer(player, cameraX, cameraY);
     }
 
-    private void turnTowardsPlayer(Player player, float cameraX, float cameraY) {
+    @Override
+    protected void turnTowardsPlayer(Player player, float cameraX, float cameraY) {
         float xDelta = hitbox.left - (player.getHitbox().left - cameraX);
         float yDelta = hitbox.top - (player.getHitbox().top - cameraY);
 
@@ -130,11 +132,6 @@ public class Archer extends Character {
 
     public boolean isPreparingAttack() {
         return preparingAttack;
-    }
-
-    public void setArcherInactive() {
-        active = false;
-        hitbox.set(0, 0, 0, 0);
     }
 
     public RectF getHitbox() {

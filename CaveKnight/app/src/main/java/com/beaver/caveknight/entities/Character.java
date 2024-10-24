@@ -23,6 +23,8 @@ public abstract class Character extends Entity {
     private RectF attackBox = null;
     private final int attackDamage;
 
+    private final int coinValue;
+
     private int maxHealth;
     private int currentHealth;
 
@@ -30,8 +32,17 @@ public abstract class Character extends Entity {
         super(pos, HITBOX_SIZE, HITBOX_SIZE);
         this.gameCharType = gameCharType;
         attackDamage = setAttackDamage();
+        coinValue = setCoinValue();
 
         updateWepHitbox();
+    }
+
+    private int setCoinValue() {
+        return switch (gameCharType) {
+            case PLAYER -> 0;
+            case SKELETON -> 5;
+            case ARCHER -> 3;
+        };
     }
 
     public void update(double delta, GameMap gameMap) {
@@ -62,8 +73,7 @@ public abstract class Character extends Entity {
     private int setAttackDamage() {
         return switch (gameCharType) {
             case PLAYER -> 50;
-            case SKELETON -> 25;
-            case ARCHER -> 10;
+            case SKELETON, ARCHER -> 25;
         };
     }
 
@@ -212,5 +222,27 @@ public abstract class Character extends Entity {
     public int getDamage() {
 
         return attackDamage;
+    }
+
+    public int getCoinValue() {
+        return coinValue;
+    }
+
+    public void prepareAttack(Player player, float cameraX, float cameraY) {
+        setAttacking(true);
+        turnTowardsPlayer(player, cameraX, cameraY);
+    }
+
+    protected void turnTowardsPlayer(Player player, float cameraX, float cameraY) {
+
+    }
+
+    public boolean isPreparingAttack() {
+        return isAttacking && !isAttackChecked; // Example logic
+    }
+
+    public void setInactive() {
+        active = false;
+        hitbox.set(0, 0, 0, 0);
     }
 }
