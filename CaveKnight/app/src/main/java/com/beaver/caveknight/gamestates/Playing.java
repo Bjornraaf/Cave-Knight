@@ -18,6 +18,7 @@ import com.beaver.caveknight.entities.Entity;
 import com.beaver.caveknight.entities.Player;
 import com.beaver.caveknight.entities.Weapons;
 import com.beaver.caveknight.entities.buildings.Building;
+import com.beaver.caveknight.entities.enemies.Archer;
 import com.beaver.caveknight.entities.enemies.Skeleton;
 import com.beaver.caveknight.entities.objects.GameObject;
 import com.beaver.caveknight.environments.Doorway;
@@ -107,17 +108,35 @@ public class Playing extends BaseState implements GameStateInterface {
             }
         }
 
-        if (mapManager.getCurrentMap().getSkeletonArrayList() != null)
-            for (Skeleton skeleton : mapManager.getCurrentMap().getSkeletonArrayList())
-                if (skeleton.isActive()) {
-                    skeleton.update(delta, mapManager.getCurrentMap());
-                    if (skeleton.isAttacking()) {
-                        if (!skeleton.isAttackChecked()) {
-                            checkEnemyAttack(skeleton);
+        if (mapManager.getCurrentMap().getEnemyArrayList() != null)
+            for (Character enemy : mapManager.getCurrentMap().getEnemyArrayList())
+                if (enemy instanceof Skeleton skeleton) {
+                    if (skeleton.isActive()) {
+                        skeleton.update(delta, mapManager.getCurrentMap());
+                        if (skeleton.isAttacking()) {
+                            if (!skeleton.isAttackChecked()) {
+                                checkEnemyAttack(skeleton);
+                            }
+                        } else if (!skeleton.isPreparingAttack()) {
+                            if (HelpMethods.IsPlayerCloseForAttack(skeleton, player, cameraY, cameraX)) {
+                                skeleton.prepareAttack(player, cameraX, cameraY);
+                            }
                         }
-                    } else if (!skeleton.isPreparingAttack()) {
-                        if (HelpMethods.IsPlayerCloseForAttack(skeleton, player, cameraY, cameraX)) {
-                            skeleton.prepareAttack(player, cameraX, cameraY);
+                    }
+                }
+        if (mapManager.getCurrentMap().getEnemyArrayList() != null)
+            for (Character enemy : mapManager.getCurrentMap().getEnemyArrayList())
+                if (enemy instanceof Archer archer) {
+                    if (archer.isActive()) {
+                        archer.update(delta, mapManager.getCurrentMap());
+                        if (archer.isAttacking()) {
+                            if (!archer.isAttackChecked()) {
+                                checkEnemyAttack(archer);
+                            }
+                        } else if (!archer.isPreparingAttack()) {
+                            if (HelpMethods.IsPlayerCloseForAttack(archer, player, cameraY, cameraX)) {
+                                archer.prepareAttack(player, cameraX, cameraY);
+                            }
                         }
                     }
                 }
@@ -193,15 +212,28 @@ public class Playing extends BaseState implements GameStateInterface {
         attackBoxWithoutCamera.top -= cameraY;
         attackBoxWithoutCamera.right -= cameraX;
         attackBoxWithoutCamera.bottom -= cameraY;
-        if (mapManager.getCurrentMap().getSkeletonArrayList() != null)
-            for (Skeleton s : mapManager.getCurrentMap().getSkeletonArrayList())
-                if (attackBoxWithoutCamera.intersects(s.getHitbox().left, s.getHitbox().top, s.getHitbox().right, s.getHitbox().bottom)){
-                    s.damageCharacter(player.getDamage());
-                    if (s.getCurrentHealth() <= 0){
-                        scoreManager.incrementScore(5);
-                        s.setSkeletonInactive();
+        if (mapManager.getCurrentMap().getEnemyArrayList() != null)
+            for (Character enemy : mapManager.getCurrentMap().getEnemyArrayList()) {
+                if (enemy instanceof Skeleton skeleton) {
+                    if (attackBoxWithoutCamera.intersects(skeleton.getHitbox().left, skeleton.getHitbox().top, skeleton.getHitbox().right, skeleton.getHitbox().bottom)) {
+                        skeleton.damageCharacter(player.getDamage());
+                        if (skeleton.getCurrentHealth() <= 0) {
+                            scoreManager.incrementScore(5);
+                            skeleton.setSkeletonInactive();
+                        }
                     }
                 }
+                if (enemy instanceof Archer archer) {
+                    if (attackBoxWithoutCamera.intersects(archer.getHitbox().left, archer.getHitbox().top, archer.getHitbox().right, archer.getHitbox().bottom)) {
+                        archer.damageCharacter(player.getDamage());
+                        if (archer.getCurrentHealth() <= 0) {
+                            scoreManager.incrementScore(5);
+                            archer.setArcherInactive();
+                        }
+                    }
+                }
+            }
+
 
 
         player.setAttackChecked(true);
@@ -223,6 +255,8 @@ public class Playing extends BaseState implements GameStateInterface {
         for (Entity e : listOfDrawables) {
             if (e instanceof Skeleton skeleton) {
                 if (skeleton.isActive()) drawCharacter(c, skeleton);
+            } else if (e instanceof Archer archer) {
+                if (archer.isActive()) drawCharacter(c, archer);
             } else if (e instanceof GameObject gameObject) {
                 mapManager.drawObject(c, gameObject);
             } else if (e instanceof Building building) {

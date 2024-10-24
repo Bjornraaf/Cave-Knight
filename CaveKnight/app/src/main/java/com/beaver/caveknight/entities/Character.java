@@ -7,6 +7,7 @@ import static com.beaver.caveknight.helpers.GameConstants.Sprite.Y_OFFSET;
 import android.graphics.PointF;
 import android.graphics.RectF;
 
+import com.beaver.caveknight.environments.GameMap;
 import com.beaver.caveknight.helpers.GameConstants;
 
 public abstract class Character extends Entity {
@@ -31,6 +32,10 @@ public abstract class Character extends Entity {
         attackDamage = setAttackDamage();
 
         updateWepHitbox();
+    }
+
+    public void update(double delta, GameMap gameMap) {
+
     }
 
     protected void setStartHealth(int health) {
@@ -58,6 +63,7 @@ public abstract class Character extends Entity {
         return switch (gameCharType) {
             case PLAYER -> 50;
             case SKELETON -> 25;
+            case ARCHER -> 10;
         };
     }
 
@@ -207,6 +213,4 @@ public abstract class Character extends Entity {
 
         return attackDamage;
     }
-
-
 }

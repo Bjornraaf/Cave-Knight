@@ -4,7 +4,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 
-import com.beaver.caveknight.entities.enemies.Skeleton;
+import com.beaver.caveknight.entities.Character;
 import com.beaver.caveknight.helpers.HelpMethods;
 import com.beaver.caveknight.main.MainActivity;
 
@@ -57,8 +57,8 @@ public class WaveManager {
         waveCount++;
         announcementText = "WAVE " + waveCount;
         announcementStartTime = System.currentTimeMillis();
-        ArrayList<Skeleton> skeletons = HelpMethods.GetSkeletonsRandomized(skeletonsPerWave * waveCount, currentMap.getSpriteIds(), currentMap);
-        currentMap.addSkeletons(skeletons);
+        ArrayList<Character> enemies = HelpMethods.GetEnemiesRandomized(skeletonsPerWave * waveCount, currentMap.getSpriteIds(), currentMap);
+        currentMap.addEnemy(enemies);
     }
 
     public void announceWave(Canvas c) {
@@ -81,7 +81,7 @@ public class WaveManager {
     }
 
     private boolean areAllSkeletonsDefeated() {
-        for (Skeleton skeleton : currentMap.getSkeletonArrayList()) {
+        for (Character skeleton : currentMap.getEnemyArrayList()) {
             if (skeleton.isActive()) {
                 return false;
             }

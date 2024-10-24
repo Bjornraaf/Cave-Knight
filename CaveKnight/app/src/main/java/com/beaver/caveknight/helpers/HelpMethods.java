@@ -7,6 +7,7 @@ import android.graphics.RectF;
 import com.beaver.caveknight.entities.Player;
 import com.beaver.caveknight.entities.Character;
 import com.beaver.caveknight.entities.buildings.Building;
+import com.beaver.caveknight.entities.enemies.Archer;
 import com.beaver.caveknight.entities.objects.GameObject;
 import com.beaver.caveknight.environments.Doorway;
 import com.beaver.caveknight.environments.GameMap;
@@ -45,9 +46,9 @@ public class HelpMethods {
         doorwayTwo.connectDoorway(doorwayOne);
     }
 
-    public static ArrayList<Skeleton> GetSkeletonsRandomized(int amount, int[][] gameMapArray, GameMap gameMap) {
-        ArrayList<Skeleton> skeletonArrayList = new ArrayList<>();
-        float buffer = GameConstants.Sprite.SIZE; // Buffer size to avoid collisions
+    public static ArrayList<Character> GetEnemiesRandomized(int amount, int[][] gameMapArray, GameMap gameMap) {
+        ArrayList<Character> enemyArrayList = new ArrayList<>();
+        float buffer = GameConstants.Sprite.SIZE;
 
         for (int i = 0; i < amount; i++) {
             boolean isValidPosition = false;
@@ -67,10 +68,25 @@ public class HelpMethods {
                 }
             }
 
-            skeletonArrayList.add(new Skeleton(position));
+            String enemyType = getRandomEnemyType();
+            enemyArrayList.add(createEnemy(enemyType, position));
         }
 
-        return skeletonArrayList;
+        return enemyArrayList;
+    }
+
+    public static Character createEnemy(String type, PointF position) {
+        return switch (type) {
+            case "Skeleton" -> new Skeleton(position);
+            case "Archer" -> new Archer(position);
+            default -> throw new IllegalArgumentException("Unknown enemy type: " + type);
+        };
+    }
+
+    public static String getRandomEnemyType() {
+        String[] enemyTypes = {"Skeleton", "Archer"};
+        int randomIndex = (int) (Math.random() * enemyTypes.length);
+        return enemyTypes[randomIndex];
     }
 
     public static float MoveNextToTileUpDown(RectF hitbox, float cameraY, float deltaY) {

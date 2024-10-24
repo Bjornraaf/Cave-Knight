@@ -12,15 +12,15 @@ import com.beaver.caveknight.helpers.HelpMethods;
 
 import java.util.Random;
 
-public class Skeleton extends Character {
+public class Archer extends Character {
     private long lastDirChange = System.currentTimeMillis();
     private final Random random = new Random();
     private boolean moving = true, preparingAttack;
     private long timerBeforeAttack, timerAttackDuration;
 
 
-    public Skeleton(PointF pos) {
-        super(pos, GameCharacters.SKELETON);
+    public Archer(PointF pos) {
+        super(pos, GameCharacters.ARCHER);
         setStartHealth(100);
     }
 
@@ -132,7 +132,7 @@ public class Skeleton extends Character {
         return preparingAttack;
     }
 
-    public void setSkeletonInactive() {
+    public void setArcherInactive() {
         active = false;
         hitbox.set(0, 0, 0, 0);
     }

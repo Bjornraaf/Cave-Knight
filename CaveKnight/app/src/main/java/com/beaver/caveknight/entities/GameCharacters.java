@@ -12,7 +12,8 @@ import com.beaver.caveknight.helpers.interfaces.BitmapMethods;
 public enum GameCharacters implements BitmapMethods {
 
     PLAYER(R.drawable.knight_spritesheet),
-    SKELETON(R.drawable.skeleton_spritesheet);
+    SKELETON(R.drawable.skeleton_spritesheet),
+    ARCHER(R.drawable.archer_spritesheet);
 
     private final Bitmap spriteSheet;
     private final Bitmap[][] sprites = new Bitmap[7][4];

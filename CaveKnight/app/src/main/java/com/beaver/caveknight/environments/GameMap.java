@@ -1,10 +1,9 @@
 package com.beaver.caveknight.environments;
 
+import com.beaver.caveknight.entities.Character;
 import com.beaver.caveknight.entities.Entity;
 import com.beaver.caveknight.entities.buildings.Building;
-import com.beaver.caveknight.entities.enemies.Skeleton;
 import com.beaver.caveknight.entities.objects.GameObject;
-import com.beaver.caveknight.entities.objects.GameObjects;
 import com.beaver.caveknight.helpers.GameConstants;
 
 import java.util.ArrayList;
@@ -16,14 +15,14 @@ public class GameMap {
     private final ArrayList<Building> buildingArrayList;
     private final ArrayList<GameObject> gameObjectArrayList;
     private final ArrayList<Doorway> doorwayArrayList;
-    private ArrayList<Skeleton> skeletonArrayList;
+    private ArrayList<Character> enemyArrayList;
 
-    public GameMap(int[][] spriteIds, MapTiles mapTilesType, ArrayList<Building> buildingArrayList, ArrayList<GameObject> gameObjectsArrayList, ArrayList<Skeleton> skeletonArrayList) {
+    public GameMap(int[][] spriteIds, MapTiles mapTilesType, ArrayList<Building> buildingArrayList, ArrayList<GameObject> gameObjectsArrayList, ArrayList<Character> enemyArrayList) {
         this.spriteIds = spriteIds;
         this.mapTilesType = mapTilesType;
         this.buildingArrayList = buildingArrayList;
         this.gameObjectArrayList = gameObjectsArrayList;
-        this.skeletonArrayList = skeletonArrayList;
+        this.enemyArrayList = enemyArrayList;
         this.doorwayArrayList = new ArrayList<>();
     }
 
@@ -34,9 +33,9 @@ public class GameMap {
         if (buildingArrayList != null)
             for (Building b : buildingArrayList)
                 list[i++] = b;
-        if (skeletonArrayList != null)
-            for (Skeleton s : skeletonArrayList)
-                list[i++] = s;
+        if (enemyArrayList != null)
+            for (Character ch : enemyArrayList)
+                list[i++] = ch;
         if (gameObjectArrayList != null)
             for (GameObject go : gameObjectArrayList)
                 list[i++] = go;
@@ -50,9 +49,9 @@ public class GameMap {
             amount += buildingArrayList.size();
         if (gameObjectArrayList != null)
             amount += gameObjectArrayList.size();
-        if (skeletonArrayList != null)
-            amount += skeletonArrayList.size();
-        amount++; //Player
+        if (enemyArrayList != null)
+            amount += enemyArrayList.size();
+        amount++;
 
         return amount;
     }
@@ -73,8 +72,8 @@ public class GameMap {
         return gameObjectArrayList;
     }
 
-    public ArrayList<Skeleton> getSkeletonArrayList() {
-        return skeletonArrayList;
+    public ArrayList<Character> getEnemyArrayList() {
+        return enemyArrayList;
     }
 
     public MapTiles getFloorType() {
@@ -106,11 +105,11 @@ public class GameMap {
         return spriteIds;
     }
 
-    public void addSkeletons(ArrayList<Skeleton> skeletons) {
-        if (this.skeletonArrayList == null) {
-            this.skeletonArrayList = new ArrayList<>();
+    public void addEnemy(ArrayList<Character> enemies) {
+        if (this.enemyArrayList == null) {
+            this.enemyArrayList = new ArrayList<>();
         }
-        this.skeletonArrayList.addAll(skeletons);
+        this.enemyArrayList.addAll(enemies);
     }
 
 

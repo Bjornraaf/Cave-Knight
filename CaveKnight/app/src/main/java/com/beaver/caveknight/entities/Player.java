@@ -21,26 +21,20 @@ public class Player extends Character {
         setStartHealth(startingHealth);
     }
 
-    // Update player state each frame
     public void update(double delta, boolean movePlayer) {
         if (movePlayer)
             updateAnimation();
         updateWepHitbox();
     }
 
-    // Reset method to restore the player to the initial state
     public void reset() {
-        // Reset player's health
         resetCharacterHealth();
 
-        // Reset player's position
         setPosition(startingPosition.x, startingPosition.y);
 
-        // Reset attack-related flags
         setAttacking(false);
         setAttackChecked(false);
 
-        // Reset player's animation (if applicable)
         resetAnimation();
     }
 
