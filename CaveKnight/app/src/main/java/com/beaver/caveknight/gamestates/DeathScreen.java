@@ -71,7 +71,7 @@ public class DeathScreen extends BaseState implements GameStateInterface {
     }
 
     private void drawScore(Canvas c) {
-        String scoreText = "Final Score: " + getFinalScore(); // Create the score text
+        String scoreText = "Final Score: " + getFinalScore();
 
         float textWidth = textPaint.measureText(scoreText);
 
@@ -91,7 +91,6 @@ public class DeathScreen extends BaseState implements GameStateInterface {
         float wavesX = menuX + (GameImages.DEATHSCREEN_MENUBG.getImage().getWidth() - textWidth) / 2;
         float wavesY = btnReplay.getHitbox().top - 17;
 
-        // Draw the waves survived on the canvas
         c.drawText(wavesText, wavesX, wavesY, textPaint);
     }
 

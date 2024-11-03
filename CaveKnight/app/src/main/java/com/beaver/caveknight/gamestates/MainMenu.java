@@ -94,7 +94,7 @@ public class MainMenu extends BaseState implements GameStateInterface {
             } else if (isButtonTouched(event, optionsButton) && optionsButton.isPushed()) {
                 System.out.println("Options Button is Clicked!");
             } else if (isButtonTouched(event, exitButton) && exitButton.isPushed()) {
-                ((MainActivity) MainActivity.getGameContext()).finish(); // Close the app
+                ((MainActivity) MainActivity.getGameContext()).finish();
             }
 
             startButton.setPushed(false);

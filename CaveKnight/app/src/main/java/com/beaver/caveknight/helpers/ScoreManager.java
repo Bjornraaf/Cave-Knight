@@ -25,6 +25,6 @@ public class ScoreManager {
     }
 
     public static int getFinalScore() {
-        return finalScore; // Get the final score
+        return finalScore;
     }
 }
